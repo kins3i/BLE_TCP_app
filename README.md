@@ -1,12 +1,12 @@
 # App for BLE and Wi-Fi device
 
--[Intro](#Intro)
+* [Intro](#Intro)
 
--[Running project](#running-project)
+* [Running project](#running-project)
 
--[TODO](#todo)
+* [TODO](#todo)
 
--[App appearance]()
+* [App appearance]()
 
 
 ## Intro
