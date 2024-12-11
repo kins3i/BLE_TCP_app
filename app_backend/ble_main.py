@@ -153,6 +153,22 @@ class Bluetooth:
             return None
         return dev_class
 
+    def _handler_already_connected(self, client: BleakClient):
+        return_client = None
+        return_dev = None
+
+        for cl in self.client_list:
+            if cl.address == client.address:
+                return_client = cl
+
+        for dev in self.client_device_list:
+            if dev[0].address == client.address:
+                return_dev = dev[1]
+
+
+        if return_client is None or return_dev is None:
+            return_dev = self._handler_single_connect(client)
+        return [return_client, return_dev]
 
     async def single_connect(self, address):
         """ Creates and connects BleakClient.
@@ -196,7 +212,8 @@ class Bluetooth:
                 return [None, None]
             if single_client.is_connected:
                 logger.warning('Client already connected')
-                # TODO: check if client is in list and if Device exists
+                single_client, dev_class = self._handler_already_connected(single_client)
+                return single_client, dev_class
 
     async def _handler_disconnecting(self, device_class, single_client):
         try:
