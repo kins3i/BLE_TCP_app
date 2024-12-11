@@ -1,6 +1,6 @@
 /credentials.py
-/app_backend/ble_char.py
-/app_backend/uuid_dict.py
-/app_backend/wifi_char.py
 __pycache__
 .idea
+/docs/_build/doctrees/
+/logs/
+.venv
