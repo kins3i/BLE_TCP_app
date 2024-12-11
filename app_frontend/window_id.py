@@ -27,7 +27,7 @@ class WindowDeviceID(customtkinter.CTkToplevel):
 
         set_geometry(self, w, h)
 
-        self.title("IMU - ID")
+        self.title("Device - ID")
 
         self.master_back = master
         self.master_ctk = master.master

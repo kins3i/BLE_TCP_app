@@ -45,7 +45,7 @@ class WindowFullInfo(ct.CTkToplevel):
 
         set_geometry(self, w, h)
 
-        self.title("IMU tester - info")
+        self.title("Device - info")
 
         self.master = master
 
