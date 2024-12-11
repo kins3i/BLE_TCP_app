@@ -81,7 +81,7 @@ class Bluetooth:
 
         Raises:
             ValueError, Exception: error occurred when awaiting connecting single device
-            """
+        """
 
         for x in self.scanned_devices:
             address = x.address
@@ -161,8 +161,8 @@ class Bluetooth:
         pairs up BleakClient wif Wi-Fi client inside Device instance.
 
         Args:
-        address: str
-            MAC address of BLE device to connect
+            address: str
+                MAC address of BLE device to connect
 
         Returns:
             Tuple of BleakClient instance and Device instance corresponding to

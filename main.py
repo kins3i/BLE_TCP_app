@@ -1,5 +1,5 @@
 """
-Main program.
+Main program. Makes sure only one instance is run.
 Created on 2024-12-01 by kins3i
 """
 

@@ -11,12 +11,12 @@ def meas_data_parser(data, conf, device):
     """ Parse measurement data based on configuration.
 
     Args:
-    data: list[int]
-        data to parse
-    conf: list[int]
-        parameters to choose type of parser
-    device: str
-        MAC address of device (BLE)
+        data: list[int]
+            data to parse
+        conf: list[int]
+            parameters to choose type of parser
+        device: str
+            MAC address of device (BLE)
     """
 
     if conf:

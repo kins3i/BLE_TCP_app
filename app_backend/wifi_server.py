@@ -25,8 +25,8 @@ def calc_crc16(input_arr: bytes):
     """ Calculate CRC16 from array.
 
     Args:
-    input_arr: bytes
-        data to calculate crc16 from
+        input_arr: bytes
+            data to calculate crc16 from
 
     Returns:
         Calculated CRC.
@@ -191,12 +191,12 @@ class WiFi:
         Reacts with graceful and hard disconnect.
 
         Args:
-        conn: socket.socket
-            object to send and receive data
-        address: tuple
-            ip address and port received by client
-        device: Device, optional
-            instance of class with BLE and Wi-Fi client references
+            conn: socket.socket
+                object to send and receive data
+            address: tuple
+                ip address and port received by client
+            device: Device, optional
+                instance of class with BLE and Wi-Fi client references
 
         Raises:
             ConnectionError: error occurred on connection between sockets.
@@ -299,10 +299,10 @@ class WiFi:
         client's sent data in response.
 
         Args:
-        msg: bytearray
-            data to send
-        client: socket.socket
-            client object to send and receive data
+            msg: bytearray
+                data to send
+            client: socket.socket
+                client object to send and receive data
 
         Returns:
             client response or list of clients responses
@@ -349,10 +349,10 @@ class WiFi:
         Reads data from chosen client or all existing clients.
 
         Args:
-        timeout: bool
-            choose if thread will be blocked while waiting for data
-        client: socket.socket
-            client object to receive data
+            timeout: bool
+                choose if thread will be blocked while waiting for data
+            client: socket.socket
+                client object to receive data
 
         Returns:
             client response or list of clients responses
