@@ -1,0 +1,961 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_backend.ble_main &mdash; BLE and TCP app 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app_backend.ble_main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app_backend.ble_main</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Module for handling BLE actions. &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">bleak</span> <span class="kn">import</span> <span class="n">BleakClient</span><span class="p">,</span> <span class="n">BleakCharacteristicNotFoundError</span>
+<span class="kn">from</span> <span class="nn">bleak</span> <span class="kn">import</span> <span class="n">BleakScanner</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">credentials</span> <span class="k">as</span> <span class="nn">cr</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">credentials_template</span> <span class="k">as</span> <span class="nn">cr</span>
+
+<span class="kn">from</span> <span class="nn">logger_set</span> <span class="kn">import</span> <span class="n">logger</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.ble_char</span> <span class="kn">import</span> <span class="n">Characteristics</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.ble_char_template</span> <span class="kn">import</span> <span class="n">Characteristics</span>
+
+<span class="kn">from</span> <span class="nn">.device</span> <span class="kn">import</span> <span class="n">Device</span>
+
+
+<div class="viewcode-block" id="Bluetooth">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth">[docs]</a>
+<span class="k">class</span> <span class="nc">Bluetooth</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Class for managing BLE functionalities.</span>
+<span class="sd">    Allows scanning, connecting, disconnecting and using all BLE characteristics.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        scanned_devices : list</span>
+<span class="sd">            all BleakScanner instances</span>
+<span class="sd">        client_list : list</span>
+<span class="sd">            all BleakClient class instances</span>
+<span class="sd">        client_device_list : list</span>
+<span class="sd">            all Device class instances</span>
+<span class="sd">        nr_of_devices: int</span>
+<span class="sd">            number of devices in scanned_devices</span>
+<span class="sd">        wifi_clients: None, list</span>
+<span class="sd">            if not None, list contains all devices connected via Wi-Fi to server</span>
+
+<span class="sd">     &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scanned_devices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_of_devices</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wifi_clients</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chars</span> <span class="o">=</span> <span class="n">Characteristics</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Bluetooth.on_close">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.on_close">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gracefully stops all BleakClients notifies.&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span><span class="p">:</span>
+            <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">stop_all_notifies</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_find_connected_in_scanned</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">temp_devices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sc</span><span class="o">.</span><span class="n">address</span> <span class="o">==</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span><span class="p">:</span>
+                    <span class="n">temp_devices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">temp_devices</span>
+
+<div class="viewcode-block" id="Bluetooth.scan">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.scan">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Scans all devices in advertisement mode and finds only chosen devices;</span>
+<span class="sd">        makes sure no device is listed more than one time. Updates number of scanned devices&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scanned_devices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_connected_in_scanned</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Scanner on&quot;</span><span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">BleakScanner</span><span class="p">()</span> <span class="k">as</span> <span class="n">scanner</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">discovered_devices</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">cr</span><span class="o">.</span><span class="n">SCAN_NAME</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># logger.info(str(d.name) + &quot; &quot; + str(d.address))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scanned_devices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_of_devices</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.all_connect">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.all_connect">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">all_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Invokes connect function for all scanned devices.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting connecting single device</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">:</span>
+            <span class="n">address</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">address</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_connect</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error while connecting to all devices on device: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.all_disconnect">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.all_disconnect">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">all_disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Invokes disconnect function for all connected devices. &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_disconnect</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ended disconnecting all devices&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_disconnect_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; This function should be invoked when BleakClient is disconnect;</span>
+
+<span class="sd">        Function might not be called if GUI uses asyncio and blocks Bleak threads.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">client</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mac_ble</span> <span class="o">==</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;disconnected callback from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_handler_single_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">single_client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Handler for creating instances for connected BleakClient. &quot;&quot;&quot;</span>
+
+        <span class="n">dev_class</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Single connected to: </span><span class="si">%s</span><span class="s2">, type: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                         <span class="n">single_client</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">single_client</span><span class="p">))</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_battery</span><span class="p">(</span><span class="n">single_client</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Battery: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+            <span class="n">_</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_dev_info</span><span class="p">(</span><span class="n">single_client</span><span class="p">)</span>
+            <span class="n">list_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">mac_ble_list</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">9</span><span class="p">:</span><span class="mi">15</span><span class="p">]</span>
+            <span class="n">mac_wifi_list</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">30</span><span class="p">:</span><span class="mi">36</span><span class="p">]</span>
+
+            <span class="n">_</span><span class="p">,</span> <span class="n">data_conf</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="n">single_client</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Conf : </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data_conf</span><span class="p">)</span>
+
+            <span class="n">is_already_client</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span> <span class="o">==</span> <span class="n">single_client</span><span class="o">.</span><span class="n">address</span><span class="p">:</span>
+                    <span class="n">is_already_client</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mac_ble</span> <span class="o">==</span> <span class="n">single_client</span><span class="o">.</span><span class="n">address</span><span class="p">:</span>
+                            <span class="n">is_already_client</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="n">dev_class</span> <span class="o">=</span> <span class="n">device</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_already_client</span><span class="p">:</span>
+                <span class="n">dev_class</span> <span class="o">=</span> <span class="n">Device</span><span class="p">(</span><span class="n">single_client</span><span class="p">,</span> <span class="n">mac_ble_list</span><span class="p">,</span> <span class="n">mac_wifi_list</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">single_client</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">single_client</span><span class="p">,</span> <span class="n">dev_class</span><span class="p">])</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wifi_clients</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">wifi_client_list</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wifi_clients</span><span class="p">:</span>
+                        <span class="n">mac_wifi_client</span> <span class="o">=</span> <span class="n">wifi_client_list</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">mac_wifi_client</span> <span class="o">==</span> <span class="n">dev_class</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">:</span>
+                            <span class="n">dev_class</span><span class="o">.</span><span class="n">client_wifi</span> <span class="o">=</span> <span class="n">wifi_client_list</span>
+            <span class="n">dev_class</span><span class="o">.</span><span class="n">configure</span> <span class="o">=</span> <span class="n">data_conf</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Can&#39;t set device: </span><span class="si">%s</span><span class="s2">, reason: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                         <span class="n">single_client</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">dev_class</span>
+
+    <span class="k">def</span> <span class="nf">_handler_already_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">):</span>
+        <span class="n">return_client</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">return_dev</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span> <span class="o">==</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">:</span>
+                <span class="n">return_client</span> <span class="o">=</span> <span class="n">cl</span>
+
+        <span class="k">for</span> <span class="n">dev</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">address</span> <span class="o">==</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">:</span>
+                <span class="n">return_dev</span> <span class="o">=</span> <span class="n">dev</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+
+        <span class="k">if</span> <span class="n">return_client</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">return_dev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">return_dev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_single_connect</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">return_client</span><span class="p">,</span> <span class="n">return_dev</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Bluetooth.single_connect">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.single_connect">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">single_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Creates and connects BleakClient.</span>
+
+<span class="sd">        Creates and adds to list Device instance; if Wi-Fi client already exists,</span>
+<span class="sd">        pairs up BleakClient wif Wi-Fi client inside Device instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            address: str</span>
+<span class="sd">                MAC address of BLE device to connect</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of BleakClient instance and Device instance corresponding to</span>
+<span class="sd">            returned BleakClient instance.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting connecting</span>
+<span class="sd">            single device or reading 2 characteristics.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ble_device</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">sc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">address</span> <span class="o">==</span> <span class="n">sc</span><span class="o">.</span><span class="n">address</span><span class="p">:</span>
+                <span class="n">ble_device</span> <span class="o">=</span> <span class="n">sc</span>
+        <span class="k">if</span> <span class="n">ble_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">single_client</span> <span class="o">=</span> <span class="n">BleakClient</span><span class="p">(</span><span class="n">address</span><span class="p">,</span>
+                                        <span class="n">disconnected_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_disconnect_callback</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">single_client</span> <span class="o">=</span> <span class="n">BleakClient</span><span class="p">(</span><span class="n">ble_device</span><span class="p">,</span>
+                                        <span class="n">disconnected_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_disconnect_callback</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">single_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">single_client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">single_client</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Can&#39;t connect: </span><span class="si">%s</span><span class="s2">, reason: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">single_client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                    <span class="n">dev_class</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_single_connect</span><span class="p">(</span><span class="n">single_client</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">single_client</span><span class="p">,</span> <span class="n">dev_class</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Failed to connect&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">single_client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Client already connected&#39;</span><span class="p">)</span>
+                <span class="n">single_client</span><span class="p">,</span> <span class="n">dev_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_already_connected</span><span class="p">(</span><span class="n">single_client</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">single_client</span><span class="p">,</span> <span class="n">dev_class</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_handler_disconnecting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device_class</span><span class="p">,</span> <span class="n">single_client</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span><span class="p">:</span>
+                <span class="n">device_address</span> <span class="o">=</span> <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mac_ble</span>
+                <span class="k">if</span> <span class="n">device_address</span> <span class="o">==</span> <span class="n">single_client</span><span class="o">.</span><span class="n">address</span><span class="p">:</span>
+                    <span class="n">device_class</span> <span class="o">=</span> <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">single_client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">device_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Disconnecting device, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+                    <span class="n">device_class</span><span class="o">.</span><span class="n">stop_all_notifies</span><span class="p">()</span>
+                    <span class="k">await</span> <span class="n">single_client</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+                    <span class="k">while</span> <span class="n">single_client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Disconnected single client: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                                 <span class="nb">str</span><span class="p">(</span><span class="n">single_client</span><span class="o">.</span><span class="n">address</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># device_class.stop_all_notifies()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_disconnect_callback</span><span class="p">(</span><span class="n">single_client</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Already disconnected: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">single_client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error disconnecting to device, </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+<div class="viewcode-block" id="Bluetooth.single_disconnect">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.single_disconnect">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">single_disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Disconnects BleakClient by address and destroys corresponding</span>
+<span class="sd">        Device instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            address: str</span>
+<span class="sd">                MAC address of BLE device to disconnect</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting disconnecting</span>
+<span class="sd">            single device.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">single_client</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">device_class</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span> <span class="o">==</span> <span class="n">address</span><span class="p">:</span>
+                <span class="n">single_client</span> <span class="o">=</span> <span class="n">client</span>
+        <span class="k">if</span> <span class="n">single_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_disconnecting</span><span class="p">(</span><span class="n">device_class</span><span class="p">,</span> <span class="n">single_client</span><span class="p">)</span></div>
+
+
+    <span class="c1"># services</span>
+<div class="viewcode-block" id="Bluetooth.read_config">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.read_config">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">read_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reads basic configuration of device by GATT characteristic.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: BleakClient, optional:</span>
+<span class="sd">                if exists, reads configuration from specified client;</span>
+<span class="sd">                if it doesn&#39;t exist, reads configuration for all BLE clients</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of MAC address and response from device or list of lists of</span>
+<span class="sd">            MAC address and response from all clients.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting reading GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cl</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                    <span class="n">address</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span>
+                    <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_config</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cl</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                            <span class="n">list_response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                            <span class="n">response</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_response</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_config</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                        <span class="k">return</span> <span class="n">response</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_handler_single_w_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+            <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_config</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                                               <span class="n">action</span><span class="o">=</span><span class="s2">&quot;W&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">client</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">write_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+                    <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+                    <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_device_list</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">device</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">address</span> <span class="o">==</span> <span class="n">address</span><span class="p">:</span>
+                            <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">configure</span> <span class="o">=</span> <span class="n">arr</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error writing: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Bluetooth.write_config">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.write_config">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">write_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                           <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                           <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes basic configuration and reads same characteristic after.</span>
+
+<span class="sd">        Writes basic configuration of device by GATT characteristic and reads</span>
+<span class="sd">        same characteristic after.</span>
+<span class="sd">        Sets list of parameters in Device instance corresponding to MAC address</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            kwargs</span>
+<span class="sd">            client: BleakClient, optional</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of MAC address and response from device or list of lists of MAC</span>
+<span class="sd">            address and response from all clients.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting writing GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span>
+            <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_single_w_config</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_single_w_config</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.write_action">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.write_action">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">write_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes GATT characteristic for action of device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action: int, optional</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting writing</span>
+<span class="sd">            GATT service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                    <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_set_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">master_slave</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_set_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">client</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">write_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">ee</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Object closed error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">ee</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.read_wifi">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.read_wifi">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">read_wifi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reads Wi-Fi configuration of device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: BleakClient, optional</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of MAC address and response from device or list of lists of</span>
+<span class="sd">            MAC address and response from all clients.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting reading GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cl</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                    <span class="n">address</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span>
+                    <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_wifi_settings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cl</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                            <span class="n">list_response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                            <span class="n">response</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_response</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_wifi_settings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.write_wifi">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.write_wifi">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">write_wifi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">ssid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">SSID</span><span class="p">,</span>
+                         <span class="n">psw</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">PSW</span><span class="p">,</span>
+                         <span class="n">ip</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">PORT</span><span class="p">,</span>
+                         <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes Wi-Fi configuration to device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ssid: str</span>
+<span class="sd">            psw: str</span>
+<span class="sd">            ip: list</span>
+<span class="sd">            port: int</span>
+<span class="sd">            client: BleakClient, optional</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            If client is defined, returns 0 after completing successfully GATT</span>
+<span class="sd">            writing.</span>
+<span class="sd">            Returns -5 if value error or exception is caught.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting writing GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">ip</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ip</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">IP</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">client</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cl</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                    <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_wifi_settings</span><span class="p">(</span><span class="n">ssid</span><span class="o">=</span><span class="n">ssid</span><span class="p">,</span>
+                                                              <span class="n">psw</span><span class="o">=</span><span class="n">psw</span><span class="p">,</span>
+                                                              <span class="n">ip</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span>
+                                                              <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span>
+                                                              <span class="n">action</span><span class="o">=</span><span class="s2">&quot;W&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cl</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="k">await</span> <span class="n">cl</span><span class="o">.</span><span class="n">write_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_wifi_settings</span><span class="p">(</span><span class="n">ssid</span><span class="o">=</span><span class="n">ssid</span><span class="p">,</span>
+                                                          <span class="n">psw</span><span class="o">=</span><span class="n">psw</span><span class="p">,</span>
+                                                          <span class="n">ip</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span>
+                                                          <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span>
+                                                          <span class="n">action</span><span class="o">=</span><span class="s2">&quot;W&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">client</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">write_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Written GATT&quot;</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="mi">0</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="mi">5</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.write_data_action">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.write_data_action">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">write_data_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mh">0x05</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes data configuration for device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action: int</span>
+<span class="sd">            data_type: int</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting writing GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_data_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">data_type</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">client</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">write_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.read_battery">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.read_battery">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">read_battery</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reads battery information from device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: BleakClient, optional</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of MAC address and response from device or list of lists of</span>
+<span class="sd">            MAC address and response from all clients.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting reading GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cl</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                    <span class="n">address</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span>
+                    <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_battery</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cl</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                            <span class="n">list_response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                            <span class="n">response</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_response</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_battery</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.read_id">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.read_id">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">read_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reads ID from device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: BleakClient</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of MAC address and response from device.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting reading GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+            <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_device_id</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.read_name">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.read_name">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">read_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reads device name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: BleakClient</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of MAC address and response from device.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting reading GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+            <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_device_name</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.write_name">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.write_name">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">write_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes device name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: BleakClient</span>
+<span class="sd">            name: str</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting writing GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+        <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+            <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_device_name</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;W&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">write_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_handler_read_dev_info_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Handler for extended info of single device. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_dev_info_new</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">BleakCharacteristicNotFoundError</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;New not found, trying old&#39;</span><span class="p">)</span>
+                        <span class="n">order2</span><span class="p">,</span> <span class="n">arr2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_dev_info_old</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">arr2</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order2</span><span class="p">)</span>
+                            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error on new and old (</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr2</span><span class="p">)]</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error on new: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_handler_read_dev_info_multiple</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Handler for extended info of all devices. &quot;&quot;&quot;</span>
+
+        <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cl</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_dev_info_new</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cl</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">BleakCharacteristicNotFoundError</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;New not found, trying old&#39;</span><span class="p">)</span>
+                        <span class="n">order2</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_dev_info_old</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">arr2</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cl</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order2</span><span class="p">)</span>
+                            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error on new and old (</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">list_response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr2</span><span class="p">)]</span>
+                                <span class="n">response</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_response</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error on new: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">list_response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                        <span class="n">response</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_response</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+
+<div class="viewcode-block" id="Bluetooth.read_dev_info">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.read_dev_info">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">read_dev_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reads extended info of device by GATT characteristic.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: BleakClient, optional</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of MAC address and response from device or list of lists of</span>
+<span class="sd">            MAC address and response from all clients.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting reading GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_read_dev_info_multiple</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_read_dev_info_single</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.write_config_update">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.write_config_update">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">write_config_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                  <span class="n">firmware</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                  <span class="n">upd_nr</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                  <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes update parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            firmware: int</span>
+<span class="sd">            upd_nr: list</span>
+<span class="sd">            client: BleakClient</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            If client is defined and value error or exception is caught,</span>
+<span class="sd">            returns -5.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting writing GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">client</span><span class="p">:</span>
+            <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_list</span>
+            <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cl</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                    <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_config_update</span><span class="p">(</span><span class="n">firmware</span><span class="o">=</span><span class="n">firmware</span><span class="p">,</span>
+                                                              <span class="n">upd_nr</span><span class="o">=</span><span class="n">upd_nr</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cl</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">write_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">cl</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_config_update</span><span class="p">(</span><span class="n">firmware</span><span class="o">=</span><span class="n">firmware</span><span class="p">,</span> <span class="n">upd_nr</span><span class="o">=</span><span class="n">upd_nr</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">write_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="mi">5</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Bluetooth.read_update_success">
+<a class="viewcode-back" href="../../backend.html#app_backend.ble_main.Bluetooth.read_update_success">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">read_update_success</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reads update status.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: BleakClient</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of MAC address and response from device.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting reading GATT</span>
+<span class="sd">            service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">address</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span>
+        <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+            <span class="n">order</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_update_status</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read_gatt_char</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="p">[</span><span class="n">address</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">5</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

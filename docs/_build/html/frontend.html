@@ -1,0 +1,555 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frontend &mdash; BLE and TCP app  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Changelog" href="history.html" />
+    <link rel="prev" title="Backend" href="backend.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="backend.html">Backend</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Frontend</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-app_frontend.gui_main">Classes and functions for main interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.gui_main.App"><code class="docutils literal notranslate"><span class="pre">App</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.cmd_conn_wifi"><code class="docutils literal notranslate"><span class="pre">App.cmd_conn_wifi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.get_config"><code class="docutils literal notranslate"><span class="pre">App.get_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.get_device_ids"><code class="docutils literal notranslate"><span class="pre">App.get_device_ids()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.get_device_info"><code class="docutils literal notranslate"><span class="pre">App.get_device_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.get_wifi"><code class="docutils literal notranslate"><span class="pre">App.get_wifi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.identify"><code class="docutils literal notranslate"><span class="pre">App.identify()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.on_exit"><code class="docutils literal notranslate"><span class="pre">App.on_exit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.one_connect"><code class="docutils literal notranslate"><span class="pre">App.one_connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.one_disconnect"><code class="docutils literal notranslate"><span class="pre">App.one_disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.open_toplevel"><code class="docutils literal notranslate"><span class="pre">App.open_toplevel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.redirector"><code class="docutils literal notranslate"><span class="pre">App.redirector()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.reset"><code class="docutils literal notranslate"><span class="pre">App.reset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.set_config"><code class="docutils literal notranslate"><span class="pre">App.set_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.set_wifi"><code class="docutils literal notranslate"><span class="pre">App.set_wifi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.start_data"><code class="docutils literal notranslate"><span class="pre">App.start_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.stop_data"><code class="docutils literal notranslate"><span class="pre">App.stop_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.synchronize"><code class="docutils literal notranslate"><span class="pre">App.synchronize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_main.App.turn_off"><code class="docutils literal notranslate"><span class="pre">App.turn_off()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame"><code class="docutils literal notranslate"><span class="pre">DeviceFrame</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.btn_connect"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.btn_connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.btn_disconnect"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.btn_disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.checkbox_event"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.checkbox_event()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.connect_threading"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.connect_threading()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.create_boxes"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.create_boxes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.create_device_frames"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.create_device_frames()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.disconnect_threading"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.disconnect_threading()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.event_start_stop"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.event_start_stop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.pack_conf_box"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.pack_conf_box()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.pack_connection_bts"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.pack_connection_bts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.start_config"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.start_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame.unpack_bts"><code class="docutils literal notranslate"><span class="pre">DeviceFrame.unpack_bts()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#updater-frontend">Updater frontend</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.update_toplevel.UpdateWindow"><code class="docutils literal notranslate"><span class="pre">UpdateWindow</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.UpdateWindow.full_update"><code class="docutils literal notranslate"><span class="pre">UpdateWindow.full_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.UpdateWindow.go_main"><code class="docutils literal notranslate"><span class="pre">UpdateWindow.go_main()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.UpdateWindow.on_exit"><code class="docutils literal notranslate"><span class="pre">UpdateWindow.on_exit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.UpdateWindow.pack_all"><code class="docutils literal notranslate"><span class="pre">UpdateWindow.pack_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.UpdateWindow.run_from_main"><code class="docutils literal notranslate"><span class="pre">UpdateWindow.run_from_main()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.UpdateWindow.scan"><code class="docutils literal notranslate"><span class="pre">UpdateWindow.scan()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.UpdateWindow.send_file"><code class="docutils literal notranslate"><span class="pre">UpdateWindow.send_file()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-app_frontend.config_window">Additional windows</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.config_window.ConfigWindow"><code class="docutils literal notranslate"><span class="pre">ConfigWindow</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.config_window.ConfigWindow.on_exit"><code class="docutils literal notranslate"><span class="pre">ConfigWindow.on_exit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.config_window.ConfigWindow.pack_all"><code class="docutils literal notranslate"><span class="pre">ConfigWindow.pack_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.config_window.ConfigWindow.send_config"><code class="docutils literal notranslate"><span class="pre">ConfigWindow.send_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.config_window.ConfigWindow.set_default_values"><code class="docutils literal notranslate"><span class="pre">ConfigWindow.set_default_values()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.config_window.ConfigWindow.set_read_values"><code class="docutils literal notranslate"><span class="pre">ConfigWindow.set_read_values()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.config_window.reverse_lookup"><code class="docutils literal notranslate"><span class="pre">reverse_lookup()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.window_id.WindowDeviceID"><code class="docutils literal notranslate"><span class="pre">WindowDeviceID</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.window_id.WindowDeviceID.create_window"><code class="docutils literal notranslate"><span class="pre">WindowDeviceID.create_window()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.window_id.WindowDeviceID.on_exit"><code class="docutils literal notranslate"><span class="pre">WindowDeviceID.on_exit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.window_info.WindowFullInfo"><code class="docutils literal notranslate"><span class="pre">WindowFullInfo</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.window_info.WindowFullInfo.on_exit"><code class="docutils literal notranslate"><span class="pre">WindowFullInfo.on_exit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.window_info.WindowFullInfo.show_info"><code class="docutils literal notranslate"><span class="pre">WindowFullInfo.show_info()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.toplevel_waiting.ToplevelWindow"><code class="docutils literal notranslate"><span class="pre">ToplevelWindow</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-app_frontend.window_shared_utils">Helper functionalities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.window_shared_utils.redirector"><code class="docutils literal notranslate"><span class="pre">redirector()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.window_shared_utils.set_geometry"><code class="docutils literal notranslate"><span class="pre">set_geometry()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.window_shared_utils.set_style"><code class="docutils literal notranslate"><span class="pre">set_style()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Frontend</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/frontend.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="frontend">
+<h1>Frontend<a class="headerlink" href="#frontend" title="Link to this heading"></a></h1>
+<p>All frontend classes and functions.</p>
+<section id="module-app_frontend.gui_main">
+<span id="classes-and-functions-for-main-interface"></span><h2>Classes and functions for main interface<a class="headerlink" href="#module-app_frontend.gui_main" title="Link to this heading"></a></h2>
+<p>Main class for creating and handling GUI.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_frontend.gui_main.</span></span><span class="sig-name descname"><span class="pre">App</span></span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App" title="Link to this definition"></a></dt>
+<dd><p>Class for handling all GUI frontend.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.cmd_conn_wifi">
+<span class="sig-name descname"><span class="pre">cmd_conn_wifi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.cmd_conn_wifi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.cmd_conn_wifi" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for sending Wi-Fi connect action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.get_config">
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.get_config" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for getting device config.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.get_device_ids">
+<span class="sig-name descname"><span class="pre">get_device_ids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.get_device_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.get_device_ids" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for getting device’s serial info.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.get_device_info">
+<span class="sig-name descname"><span class="pre">get_device_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.get_device_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.get_device_info" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for setting full device info.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.get_wifi">
+<span class="sig-name descname"><span class="pre">get_wifi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.get_wifi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.get_wifi" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for getting Wi-Fi config.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.identify">
+<span class="sig-name descname"><span class="pre">identify</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.identify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.identify" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for sending identify action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.on_exit">
+<span class="sig-name descname"><span class="pre">on_exit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.on_exit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.on_exit" title="Link to this definition"></a></dt>
+<dd><p>Called when window is closed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.one_connect">
+<span class="sig-name descname"><span class="pre">one_connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.one_connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.one_connect" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for device connect.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.one_disconnect">
+<span class="sig-name descname"><span class="pre">one_disconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.one_disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.one_disconnect" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for device disconnect.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.open_toplevel">
+<span class="sig-name descname"><span class="pre">open_toplevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.open_toplevel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.open_toplevel" title="Link to this definition"></a></dt>
+<dd><p>Sets waiter window.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.redirector">
+<span class="sig-name descname"><span class="pre">redirector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.redirector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.redirector" title="Link to this definition"></a></dt>
+<dd><p>Sets text in textbox.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.reset" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for sending reset action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.set_config">
+<span class="sig-name descname"><span class="pre">set_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.set_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.set_config" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for setting device config.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.set_wifi">
+<span class="sig-name descname"><span class="pre">set_wifi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.set_wifi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.set_wifi" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for setting Wi-Fi config.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.start_data">
+<span class="sig-name descname"><span class="pre">start_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.start_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.start_data" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for sending start data action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.stop_data">
+<span class="sig-name descname"><span class="pre">stop_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.stop_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.stop_data" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for sending stop data action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.synchronize">
+<span class="sig-name descname"><span class="pre">synchronize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.synchronize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.synchronize" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for sending Wi-Fi connect action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_main.App.turn_off">
+<span class="sig-name descname"><span class="pre">turn_off</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_main.html#App.turn_off"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_main.App.turn_off" title="Link to this definition"></a></dt>
+<dd><p>Calls backend for sending turning off action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-app_frontend.gui_frames">Class for creating GUI objects.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_frontend.gui_frames.</span></span><span class="sig-name descname"><span class="pre">DeviceFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#app_frontend.gui_main.App" title="app_frontend.gui_main.App"><span class="pre">App</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame" title="Link to this definition"></a></dt>
+<dd><p>Create and handle elements of GUI.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.btn_connect">
+<span class="sig-name descname"><span class="pre">btn_connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.btn_connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.btn_connect" title="Link to this definition"></a></dt>
+<dd><p>Sets connecting thread for every button.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.btn_disconnect">
+<span class="sig-name descname"><span class="pre">btn_disconnect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.btn_disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.btn_disconnect" title="Link to this definition"></a></dt>
+<dd><p>Sets disconnecting thread for every button.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.checkbox_event">
+<span class="sig-name descname"><span class="pre">checkbox_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">btn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.checkbox_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.checkbox_event" title="Link to this definition"></a></dt>
+<dd><p>Set function to be called when checkbox state is changed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.connect_threading">
+<span class="sig-name descname"><span class="pre">connect_threading</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">button</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.connect_threading"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.connect_threading" title="Link to this definition"></a></dt>
+<dd><p>Calls connecting device and checks checkbox.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.create_boxes">
+<span class="sig-name descname"><span class="pre">create_boxes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.create_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.create_boxes" title="Link to this definition"></a></dt>
+<dd><p>Sets and packs all devices checkboxes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.create_device_frames">
+<span class="sig-name descname"><span class="pre">create_device_frames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.create_device_frames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.create_device_frames" title="Link to this definition"></a></dt>
+<dd><p>Set all GUI elements beside devices checkboxes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.disconnect_threading">
+<span class="sig-name descname"><span class="pre">disconnect_threading</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">button</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.disconnect_threading"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.disconnect_threading" title="Link to this definition"></a></dt>
+<dd><p>Calls disconnecting device and unchecks checkbox.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.event_start_stop">
+<span class="sig-name descname"><span class="pre">event_start_stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.event_start_stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.event_start_stop" title="Link to this definition"></a></dt>
+<dd><p>Sets threading for starting and stopping data on checkbox.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.pack_conf_box">
+<span class="sig-name descname"><span class="pre">pack_conf_box</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.pack_conf_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.pack_conf_box" title="Link to this definition"></a></dt>
+<dd><p>Pack all GUI elements beside devices checkboxes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.pack_connection_bts">
+<span class="sig-name descname"><span class="pre">pack_connection_bts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.pack_connection_bts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.pack_connection_bts" title="Link to this definition"></a></dt>
+<dd><p>Pack connect and disconnect buttons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.start_config">
+<span class="sig-name descname"><span class="pre">start_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.start_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.start_config" title="Link to this definition"></a></dt>
+<dd><p>Call parent’s read config and sets config GUI.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.gui_frames.DeviceFrame.unpack_bts">
+<span class="sig-name descname"><span class="pre">unpack_bts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/gui_frames.html#DeviceFrame.unpack_bts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.gui_frames.DeviceFrame.unpack_bts" title="Link to this definition"></a></dt>
+<dd><p>Destroy all GUI elements.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="updater-frontend">
+<h2>Updater frontend<a class="headerlink" href="#updater-frontend" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.UpdateWindow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_frontend.update_toplevel.</span></span><span class="sig-name descname"><span class="pre">UpdateWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#app_frontend.gui_main.App" title="app_frontend.gui_main.App"><span class="pre">App</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#UpdateWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.UpdateWindow" title="Link to this definition"></a></dt>
+<dd><p>GUI and backend for device updater.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.UpdateWindow.full_update">
+<span class="sig-name descname"><span class="pre">full_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#UpdateWindow.full_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.UpdateWindow.full_update" title="Link to this definition"></a></dt>
+<dd><p>Calls main steps of update.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.UpdateWindow.go_main">
+<span class="sig-name descname"><span class="pre">go_main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#UpdateWindow.go_main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.UpdateWindow.go_main" title="Link to this definition"></a></dt>
+<dd><p>Closes window and go backs to main window.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.UpdateWindow.on_exit">
+<span class="sig-name descname"><span class="pre">on_exit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#UpdateWindow.on_exit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.UpdateWindow.on_exit" title="Link to this definition"></a></dt>
+<dd><p>Called when window is closed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.UpdateWindow.pack_all">
+<span class="sig-name descname"><span class="pre">pack_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#UpdateWindow.pack_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.UpdateWindow.pack_all" title="Link to this definition"></a></dt>
+<dd><p>Pack all GUI elements.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.UpdateWindow.run_from_main">
+<span class="sig-name descname"><span class="pre">run_from_main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#UpdateWindow.run_from_main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.UpdateWindow.run_from_main" title="Link to this definition"></a></dt>
+<dd><p>Set variables if updater was opened from main window after scan.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.UpdateWindow.scan">
+<span class="sig-name descname"><span class="pre">scan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#UpdateWindow.scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.UpdateWindow.scan" title="Link to this definition"></a></dt>
+<dd><p>Sets GUI for scanning and connecting device.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.UpdateWindow.send_file">
+<span class="sig-name descname"><span class="pre">send_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#UpdateWindow.send_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.UpdateWindow.send_file" title="Link to this definition"></a></dt>
+<dd><p>Calls function to send file/s to configured device.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-app_frontend.config_window">
+<span id="additional-windows"></span><h2>Additional windows<a class="headerlink" href="#module-app_frontend.config_window" title="Link to this heading"></a></h2>
+<p>GUI window for device settings.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_frontend.config_window.ConfigWindow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_frontend.config_window.</span></span><span class="sig-name descname"><span class="pre">ConfigWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#app_frontend.gui_frames.DeviceFrame" title="app_frontend.gui_frames.DeviceFrame"><span class="pre">DeviceFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/config_window.html#ConfigWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.config_window.ConfigWindow" title="Link to this definition"></a></dt>
+<dd><p>Creating GUI and sending device config.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.config_window.ConfigWindow.on_exit">
+<span class="sig-name descname"><span class="pre">on_exit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/config_window.html#ConfigWindow.on_exit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.config_window.ConfigWindow.on_exit" title="Link to this definition"></a></dt>
+<dd><p>Called when closing window.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.config_window.ConfigWindow.pack_all">
+<span class="sig-name descname"><span class="pre">pack_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/config_window.html#ConfigWindow.pack_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.config_window.ConfigWindow.pack_all" title="Link to this definition"></a></dt>
+<dd><p>Pack all GUI elements.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.config_window.ConfigWindow.send_config">
+<span class="sig-name descname"><span class="pre">send_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/config_window.html#ConfigWindow.send_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.config_window.ConfigWindow.send_config" title="Link to this definition"></a></dt>
+<dd><p>Get arguments and call config setting function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.config_window.ConfigWindow.set_default_values">
+<span class="sig-name descname"><span class="pre">set_default_values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/config_window.html#ConfigWindow.set_default_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.config_window.ConfigWindow.set_default_values" title="Link to this definition"></a></dt>
+<dd><p>Setting default entries and boxes values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.config_window.ConfigWindow.set_read_values">
+<span class="sig-name descname"><span class="pre">set_read_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/config_window.html#ConfigWindow.set_read_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.config_window.ConfigWindow.set_read_values" title="Link to this definition"></a></dt>
+<dd><p>Setting entries and boxes values from device config.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app_frontend.config_window.reverse_lookup">
+<span class="sig-prename descclassname"><span class="pre">app_frontend.config_window.</span></span><span class="sig-name descname"><span class="pre">reverse_lookup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/config_window.html#reverse_lookup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.config_window.reverse_lookup" title="Link to this definition"></a></dt>
+<dd><p>Get dictionary key knowing value only.</p>
+</dd></dl>
+
+<p id="module-app_frontend.window_id">GUI class for presenting device ID data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_frontend.window_id.WindowDeviceID">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_frontend.window_id.</span></span><span class="sig-name descname"><span class="pre">WindowDeviceID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="backend.html#app_backend.gui_backend.AppFnc" title="app_backend.gui_backend.AppFnc"><span class="pre">AppFnc</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_id.html#WindowDeviceID"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_id.WindowDeviceID" title="Link to this definition"></a></dt>
+<dd><p>Handles and shows serial ID and name of device.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.window_id.WindowDeviceID.create_window">
+<span class="sig-name descname"><span class="pre">create_window</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_id.html#WindowDeviceID.create_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_id.WindowDeviceID.create_window" title="Link to this definition"></a></dt>
+<dd><p>Calls function for showing all data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.window_id.WindowDeviceID.on_exit">
+<span class="sig-name descname"><span class="pre">on_exit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_id.html#WindowDeviceID.on_exit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_id.WindowDeviceID.on_exit" title="Link to this definition"></a></dt>
+<dd><p>Called when window is closed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-app_frontend.window_info">GUI class for presenting full device info.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_frontend.window_info.WindowFullInfo">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_frontend.window_info.</span></span><span class="sig-name descname"><span class="pre">WindowFullInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#app_frontend.gui_main.App" title="app_frontend.gui_main.App"><span class="pre">App</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_info.html#WindowFullInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_info.WindowFullInfo" title="Link to this definition"></a></dt>
+<dd><p>Handles and presents full device info.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.window_info.WindowFullInfo.on_exit">
+<span class="sig-name descname"><span class="pre">on_exit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_info.html#WindowFullInfo.on_exit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_info.WindowFullInfo.on_exit" title="Link to this definition"></a></dt>
+<dd><p>Called when window is closed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.window_info.WindowFullInfo.show_info">
+<span class="sig-name descname"><span class="pre">show_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_info.html#WindowFullInfo.show_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_info.WindowFullInfo.show_info" title="Link to this definition"></a></dt>
+<dd><p>Parses data and presents it in readable form.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-app_frontend.toplevel_waiting">Class for creating waiting window.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_frontend.toplevel_waiting.ToplevelWindow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_frontend.toplevel_waiting.</span></span><span class="sig-name descname"><span class="pre">ToplevelWindow</span></span><a class="reference internal" href="_modules/app_frontend/toplevel_waiting.html#ToplevelWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.toplevel_waiting.ToplevelWindow" title="Link to this definition"></a></dt>
+<dd><p>Class for creating window when main window is busy.</p>
+</dd></dl>
+
+</section>
+<section id="module-app_frontend.window_shared_utils">
+<span id="helper-functionalities"></span><h2>Helper functionalities<a class="headerlink" href="#module-app_frontend.window_shared_utils" title="Link to this heading"></a></h2>
+<p>Set shared parameters of window.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="app_frontend.window_shared_utils.redirector">
+<span class="sig-prename descclassname"><span class="pre">app_frontend.window_shared_utils.</span></span><span class="sig-name descname"><span class="pre">redirector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_shared_utils.html#redirector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_shared_utils.redirector" title="Link to this definition"></a></dt>
+<dd><p>Sets text to textbox.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app_frontend.window_shared_utils.set_geometry">
+<span class="sig-prename descclassname"><span class="pre">app_frontend.window_shared_utils.</span></span><span class="sig-name descname"><span class="pre">set_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_shared_utils.html#set_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_shared_utils.set_geometry" title="Link to this definition"></a></dt>
+<dd><p>Set customtkinter window geometry.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app_frontend.window_shared_utils.set_style">
+<span class="sig-prename descclassname"><span class="pre">app_frontend.window_shared_utils.</span></span><span class="sig-name descname"><span class="pre">set_style</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/window_shared_utils.html#set_style"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.window_shared_utils.set_style" title="Link to this definition"></a></dt>
+<dd><p>Sets style to customtkinter object.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="backend.html" class="btn btn-neutral float-left" title="Backend" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="history.html" class="btn btn-neutral float-right" title="Changelog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

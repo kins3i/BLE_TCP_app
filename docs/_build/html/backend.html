@@ -1,0 +1,1361 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backend &mdash; BLE and TCP app  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frontend" href="frontend.html" />
+    <link rel="prev" title="BLE and TCP app documentation (v. 0.0.2 )" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Backend</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-main">Main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-app_backend.gui_backend">Classes and functions for main functionalities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.gui_backend.AppFnc"><code class="docutils literal notranslate"><span class="pre">AppFnc</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.master"><code class="docutils literal notranslate"><span class="pre">AppFnc.master</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.ble"><code class="docutils literal notranslate"><span class="pre">AppFnc.ble</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.wifi"><code class="docutils literal notranslate"><span class="pre">AppFnc.wifi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.wifi_response"><code class="docutils literal notranslate"><span class="pre">AppFnc.wifi_response</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.loop"><code class="docutils literal notranslate"><span class="pre">AppFnc.loop</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.transmission_type"><code class="docutils literal notranslate"><span class="pre">AppFnc.transmission_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.get_battery"><code class="docutils literal notranslate"><span class="pre">AppFnc.get_battery()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.get_conf"><code class="docutils literal notranslate"><span class="pre">AppFnc.get_conf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.get_device_ids"><code class="docutils literal notranslate"><span class="pre">AppFnc.get_device_ids()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.get_device_info"><code class="docutils literal notranslate"><span class="pre">AppFnc.get_device_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.get_id"><code class="docutils literal notranslate"><span class="pre">AppFnc.get_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.get_name"><code class="docutils literal notranslate"><span class="pre">AppFnc.get_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.get_wifi"><code class="docutils literal notranslate"><span class="pre">AppFnc.get_wifi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.on_close"><code class="docutils literal notranslate"><span class="pre">AppFnc.on_close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.one_connect"><code class="docutils literal notranslate"><span class="pre">AppFnc.one_connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.one_disconnect"><code class="docutils literal notranslate"><span class="pre">AppFnc.one_disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.scan"><code class="docutils literal notranslate"><span class="pre">AppFnc.scan()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.set_action"><code class="docutils literal notranslate"><span class="pre">AppFnc.set_action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.set_conf"><code class="docutils literal notranslate"><span class="pre">AppFnc.set_conf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.set_name"><code class="docutils literal notranslate"><span class="pre">AppFnc.set_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.set_wifi"><code class="docutils literal notranslate"><span class="pre">AppFnc.set_wifi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.start_data"><code class="docutils literal notranslate"><span class="pre">AppFnc.start_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.gui_backend.AppFnc.stop_data"><code class="docutils literal notranslate"><span class="pre">AppFnc.stop_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.device.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.client_ble"><code class="docutils literal notranslate"><span class="pre">Device.client_ble</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.address_ble"><code class="docutils literal notranslate"><span class="pre">Device.address_ble</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.address_wifi"><code class="docutils literal notranslate"><span class="pre">Device.address_wifi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.mac_ble"><code class="docutils literal notranslate"><span class="pre">Device.mac_ble</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.mac_wifi"><code class="docutils literal notranslate"><span class="pre">Device.mac_wifi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.client_wifi"><code class="docutils literal notranslate"><span class="pre">Device.client_wifi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.chars"><code class="docutils literal notranslate"><span class="pre">Device.chars</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.notifies"><code class="docutils literal notranslate"><span class="pre">Device.notifies</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.iter_upd_status"><code class="docutils literal notranslate"><span class="pre">Device.iter_upd_status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device._stop_flag"><code class="docutils literal notranslate"><span class="pre">Device._stop_flag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.configure"><code class="docutils literal notranslate"><span class="pre">Device.configure</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.async_data"><code class="docutils literal notranslate"><span class="pre">Device.async_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.async_device_status"><code class="docutils literal notranslate"><span class="pre">Device.async_device_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.async_update_status"><code class="docutils literal notranslate"><span class="pre">Device.async_update_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.get_update_status_notify"><code class="docutils literal notranslate"><span class="pre">Device.get_update_status_notify()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.start_notifies"><code class="docutils literal notranslate"><span class="pre">Device.start_notifies()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.device.Device.stop_all_notifies"><code class="docutils literal notranslate"><span class="pre">Device.stop_all_notifies()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.ble_main.Bluetooth"><code class="docutils literal notranslate"><span class="pre">Bluetooth</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.scanned_devices"><code class="docutils literal notranslate"><span class="pre">Bluetooth.scanned_devices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.client_list"><code class="docutils literal notranslate"><span class="pre">Bluetooth.client_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.client_device_list"><code class="docutils literal notranslate"><span class="pre">Bluetooth.client_device_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.nr_of_devices"><code class="docutils literal notranslate"><span class="pre">Bluetooth.nr_of_devices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.wifi_clients"><code class="docutils literal notranslate"><span class="pre">Bluetooth.wifi_clients</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.all_connect"><code class="docutils literal notranslate"><span class="pre">Bluetooth.all_connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.all_disconnect"><code class="docutils literal notranslate"><span class="pre">Bluetooth.all_disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.on_close"><code class="docutils literal notranslate"><span class="pre">Bluetooth.on_close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.read_battery"><code class="docutils literal notranslate"><span class="pre">Bluetooth.read_battery()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.read_config"><code class="docutils literal notranslate"><span class="pre">Bluetooth.read_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.read_dev_info"><code class="docutils literal notranslate"><span class="pre">Bluetooth.read_dev_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.read_id"><code class="docutils literal notranslate"><span class="pre">Bluetooth.read_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.read_name"><code class="docutils literal notranslate"><span class="pre">Bluetooth.read_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.read_update_success"><code class="docutils literal notranslate"><span class="pre">Bluetooth.read_update_success()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.read_wifi"><code class="docutils literal notranslate"><span class="pre">Bluetooth.read_wifi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.scan"><code class="docutils literal notranslate"><span class="pre">Bluetooth.scan()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.single_connect"><code class="docutils literal notranslate"><span class="pre">Bluetooth.single_connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.single_disconnect"><code class="docutils literal notranslate"><span class="pre">Bluetooth.single_disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.write_action"><code class="docutils literal notranslate"><span class="pre">Bluetooth.write_action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.write_config"><code class="docutils literal notranslate"><span class="pre">Bluetooth.write_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.write_config_update"><code class="docutils literal notranslate"><span class="pre">Bluetooth.write_config_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.write_data_action"><code class="docutils literal notranslate"><span class="pre">Bluetooth.write_data_action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.write_name"><code class="docutils literal notranslate"><span class="pre">Bluetooth.write_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_main.Bluetooth.write_wifi"><code class="docutils literal notranslate"><span class="pre">Bluetooth.write_wifi()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.wifi_server.WiFi"><code class="docutils literal notranslate"><span class="pre">WiFi</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.client_flag"><code class="docutils literal notranslate"><span class="pre">WiFi.client_flag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.clients"><code class="docutils literal notranslate"><span class="pre">WiFi.clients</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.list_of_threads"><code class="docutils literal notranslate"><span class="pre">WiFi.list_of_threads</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.listening_clients"><code class="docutils literal notranslate"><span class="pre">WiFi.listening_clients</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.dev_classes"><code class="docutils literal notranslate"><span class="pre">WiFi.dev_classes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.s"><code class="docutils literal notranslate"><span class="pre">WiFi.s</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.create_server"><code class="docutils literal notranslate"><span class="pre">WiFi.create_server()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.listen_on_socket"><code class="docutils literal notranslate"><span class="pre">WiFi.listen_on_socket()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.on_close"><code class="docutils literal notranslate"><span class="pre">WiFi.on_close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.on_new_client"><code class="docutils literal notranslate"><span class="pre">WiFi.on_new_client()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.read_response"><code class="docutils literal notranslate"><span class="pre">WiFi.read_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.wifi_server.WiFi.send_with_response"><code class="docutils literal notranslate"><span class="pre">WiFi.send_with_response()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.wifi_server.calc_crc16"><code class="docutils literal notranslate"><span class="pre">calc_crc16()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#app_frontend.update_toplevel.Updater"><code class="docutils literal notranslate"><span class="pre">Updater</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.Updater.full_update"><code class="docutils literal notranslate"><span class="pre">Updater.full_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.Updater.run_from_main"><code class="docutils literal notranslate"><span class="pre">Updater.run_from_main()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.Updater.scan"><code class="docutils literal notranslate"><span class="pre">Updater.scan()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_frontend.update_toplevel.Updater.send_file"><code class="docutils literal notranslate"><span class="pre">Updater.send_file()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-app_backend.ble_char">Characteristics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.ble_char.Characteristics"><code class="docutils literal notranslate"><span class="pre">Characteristics</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_battery"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_battery()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_config"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_config_update"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_config_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_data"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_data_action"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_data_action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_dev_info_new"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_dev_info_new()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_dev_info_old"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_dev_info_old()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_device_id"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_device_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_device_name"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_device_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_get_status"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_get_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_set_action"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_set_action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_update_status"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_update_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.ble_char.Characteristics.ble_wifi_settings"><code class="docutils literal notranslate"><span class="pre">Characteristics.ble_wifi_settings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.wifi_char.chunk_characteristic"><code class="docutils literal notranslate"><span class="pre">chunk_characteristic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.wifi_char.file_characteristic"><code class="docutils literal notranslate"><span class="pre">file_characteristic()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-app_backend.parser">Helper classes and functionalities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.parser.Data"><code class="docutils literal notranslate"><span class="pre">Data</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.parser.Data.decode_data_frames"><code class="docutils literal notranslate"><span class="pre">Data.decode_data_frames()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#app_backend.parser.Data.decode_data_packets"><code class="docutils literal notranslate"><span class="pre">Data.decode_data_packets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#app_backend.parser.meas_data_parser"><code class="docutils literal notranslate"><span class="pre">meas_data_parser()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Backend</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/backend.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="backend">
+<h1>Backend<a class="headerlink" href="#backend" title="Link to this heading"></a></h1>
+<p>All backend classes and functions.</p>
+<section id="module-main">
+<span id="main"></span><h2>Main<a class="headerlink" href="#module-main" title="Link to this heading"></a></h2>
+<p>Main program. Makes sure only one instance is run.
+Created on 2024-12-01 by kins3i</p>
+</section>
+<section id="module-app_backend.gui_backend">
+<span id="classes-and-functions-for-main-functionalities"></span><h2>Classes and functions for main functionalities<a class="headerlink" href="#module-app_backend.gui_backend" title="Link to this heading"></a></h2>
+<p>Main GUI class.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_backend.gui_backend.</span></span><span class="sig-name descname"><span class="pre">AppFnc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="frontend.html#app_frontend.gui_main.App" title="app_frontend.gui_main.App"><span class="pre">App</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc" title="Link to this definition"></a></dt>
+<dd><p>Class handling backend for GUI.</p>
+<p>Calls every external backend class or function to relieve GUI code.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.master">
+<span class="sig-name descname"><span class="pre">master</span></span><a class="headerlink" href="#app_backend.gui_backend.AppFnc.master" title="Link to this definition"></a></dt>
+<dd><p>App</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.ble">
+<span class="sig-name descname"><span class="pre">ble</span></span><a class="headerlink" href="#app_backend.gui_backend.AppFnc.ble" title="Link to this definition"></a></dt>
+<dd><p>Ble</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.wifi">
+<span class="sig-name descname"><span class="pre">wifi</span></span><a class="headerlink" href="#app_backend.gui_backend.AppFnc.wifi" title="Link to this definition"></a></dt>
+<dd><p>WiFi</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.wifi_response">
+<span class="sig-name descname"><span class="pre">wifi_response</span></span><a class="headerlink" href="#app_backend.gui_backend.AppFnc.wifi_response" title="Link to this definition"></a></dt>
+<dd><p>threading.Thread</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.loop">
+<span class="sig-name descname"><span class="pre">loop</span></span><a class="headerlink" href="#app_backend.gui_backend.AppFnc.loop" title="Link to this definition"></a></dt>
+<dd><p>coroutine</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.transmission_type">
+<span class="sig-name descname"><span class="pre">transmission_type</span></span><a class="headerlink" href="#app_backend.gui_backend.AppFnc.transmission_type" title="Link to this definition"></a></dt>
+<dd><p>int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.get_battery">
+<span class="sig-name descname"><span class="pre">get_battery</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.get_battery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.get_battery" title="Link to this definition"></a></dt>
+<dd><p>Calls reading battery info on all BLE devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[address, battery info]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of responses like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.get_conf">
+<span class="sig-name descname"><span class="pre">get_conf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.get_conf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.get_conf" title="Link to this definition"></a></dt>
+<dd><p>Calls reading device config on all BLE devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[address, config]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of responses like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.get_device_ids">
+<span class="sig-name descname"><span class="pre">get_device_ids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.get_device_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.get_device_ids" title="Link to this definition"></a></dt>
+<dd><p>Calls GUI for handling device serial info.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.get_device_info">
+<span class="sig-name descname"><span class="pre">get_device_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.get_device_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.get_device_info" title="Link to this definition"></a></dt>
+<dd><p>Calls GUI for handling device full info.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.get_id">
+<span class="sig-name descname"><span class="pre">get_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.get_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.get_id" title="Link to this definition"></a></dt>
+<dd><p>Calls reading serial info on BLE client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[address, battery info]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>response like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.get_name">
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.get_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.get_name" title="Link to this definition"></a></dt>
+<dd><p>Calls reading device name on BLE client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[address, battery info]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>response like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.get_wifi">
+<span class="sig-name descname"><span class="pre">get_wifi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.get_wifi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.get_wifi" title="Link to this definition"></a></dt>
+<dd><p>Calls reading Wi-Fi config on all BLE devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[address, Wi-Fi config]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of responses like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.on_close">
+<span class="sig-name descname"><span class="pre">on_close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.on_close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.on_close" title="Link to this definition"></a></dt>
+<dd><p>Function called when closing GUI.</p>
+<p>Gracefully ends all processes on BLE and TCP.
+Prints last BLE measurement (if exists).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.one_connect">
+<span class="sig-name descname"><span class="pre">one_connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.one_connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.one_connect" title="Link to this definition"></a></dt>
+<dd><p>Calls connect function on BLE device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[BleakClient, Device] or [None, None] when error is caught.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.one_disconnect">
+<span class="sig-name descname"><span class="pre">one_disconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.one_disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.one_disconnect" title="Link to this definition"></a></dt>
+<dd><p>Calls disconnect function on BLE device.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.scan">
+<span class="sig-name descname"><span class="pre">scan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.scan" title="Link to this definition"></a></dt>
+<dd><p>Runs BLE scanner.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.set_action">
+<span class="sig-name descname"><span class="pre">set_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.set_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.set_action" title="Link to this definition"></a></dt>
+<dd><p>Invokes action based on string argument.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.set_conf">
+<span class="sig-name descname"><span class="pre">set_conf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.set_conf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.set_conf" title="Link to this definition"></a></dt>
+<dd><p>Calls writing and reading device config on all BLE devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[address, config]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of responses like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.set_name">
+<span class="sig-name descname"><span class="pre">set_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.set_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.set_name" title="Link to this definition"></a></dt>
+<dd><p>Calls writing and reading device name on BLE client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[address, name]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>response like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.set_wifi">
+<span class="sig-name descname"><span class="pre">set_wifi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.set_wifi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.set_wifi" title="Link to this definition"></a></dt>
+<dd><p>Calls writing Wi-Fi config on all BLE devices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.start_data">
+<span class="sig-name descname"><span class="pre">start_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.start_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.start_data" title="Link to this definition"></a></dt>
+<dd><p>Invokes start of data receiving via BLE or TCP.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.gui_backend.AppFnc.stop_data">
+<span class="sig-name descname"><span class="pre">stop_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/gui_backend.html#AppFnc.stop_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.gui_backend.AppFnc.stop_data" title="Link to this definition"></a></dt>
+<dd><p>Invokes stop of data receiving.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-app_backend.device">Module for joining Bleak and TCP client.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_backend.device.Device">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_backend.device.</span></span><span class="sig-name descname"><span class="pre">Device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ble</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address_ble</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address_wifi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/device.html#Device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.device.Device" title="Link to this definition"></a></dt>
+<dd><p>Class for connecting BLE and Wi-Fi client and managing notifies.</p>
+<p>Allows connecting BLE client with Wi-Fi client, manages notifies and parses
+measurement data.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.client_ble">
+<span class="sig-name descname"><span class="pre">client_ble</span></span><a class="headerlink" href="#app_backend.device.Device.client_ble" title="Link to this definition"></a></dt>
+<dd><p>BleakClient</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.address_ble">
+<span class="sig-name descname"><span class="pre">address_ble</span></span><a class="headerlink" href="#app_backend.device.Device.address_ble" title="Link to this definition"></a></dt>
+<dd><p>list[int]</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.address_wifi">
+<span class="sig-name descname"><span class="pre">address_wifi</span></span><a class="headerlink" href="#app_backend.device.Device.address_wifi" title="Link to this definition"></a></dt>
+<dd><p>list[int]</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.mac_ble">
+<span class="sig-name descname"><span class="pre">mac_ble</span></span><a class="headerlink" href="#app_backend.device.Device.mac_ble" title="Link to this definition"></a></dt>
+<dd><p>str</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.mac_wifi">
+<span class="sig-name descname"><span class="pre">mac_wifi</span></span><a class="headerlink" href="#app_backend.device.Device.mac_wifi" title="Link to this definition"></a></dt>
+<dd><p>str</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.client_wifi">
+<span class="sig-name descname"><span class="pre">client_wifi</span></span><a class="headerlink" href="#app_backend.device.Device.client_wifi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.chars">
+<span class="sig-name descname"><span class="pre">chars</span></span><a class="headerlink" href="#app_backend.device.Device.chars" title="Link to this definition"></a></dt>
+<dd><p>Characteristics</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.notifies">
+<span class="sig-name descname"><span class="pre">notifies</span></span><a class="headerlink" href="#app_backend.device.Device.notifies" title="Link to this definition"></a></dt>
+<dd><p>list[_Notify]</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.iter_upd_status">
+<span class="sig-name descname"><span class="pre">iter_upd_status</span></span><a class="headerlink" href="#app_backend.device.Device.iter_upd_status" title="Link to this definition"></a></dt>
+<dd><p>int</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device._stop_flag">
+<span class="sig-name descname"><span class="pre">_stop_flag</span></span><a class="headerlink" href="#app_backend.device.Device._stop_flag" title="Link to this definition"></a></dt>
+<dd><p>bool</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.device.Device.configure">
+<span class="sig-name descname"><span class="pre">configure</span></span><a class="headerlink" href="#app_backend.device.Device.configure" title="Link to this definition"></a></dt>
+<dd><p>None, list</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.device.Device.async_data">
+<span class="sig-name descname"><span class="pre">async_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/device.html#Device.async_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.device.Device.async_data" title="Link to this definition"></a></dt>
+<dd><p>Starts asyncio loop for data notify.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.device.Device.async_device_status">
+<span class="sig-name descname"><span class="pre">async_device_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/device.html#Device.async_device_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.device.Device.async_device_status" title="Link to this definition"></a></dt>
+<dd><p>Starts asyncio loop for device status notify.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.device.Device.async_update_status">
+<span class="sig-name descname"><span class="pre">async_update_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/device.html#Device.async_update_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.device.Device.async_update_status" title="Link to this definition"></a></dt>
+<dd><p>Starts asyncio loop for update status notify.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.device.Device.get_update_status_notify">
+<span class="sig-name descname"><span class="pre">get_update_status_notify</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/device.html#Device.get_update_status_notify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.device.Device.get_update_status_notify" title="Link to this definition"></a></dt>
+<dd><p>Returns update status list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.device.Device.start_notifies">
+<span class="sig-name descname"><span class="pre">start_notifies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/device.html#Device.start_notifies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.device.Device.start_notifies" title="Link to this definition"></a></dt>
+<dd><p>Starts all notify readings.</p>
+<p>Starts and awaits on all notifies from devices.
+Every notify is awaited in different thread.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.device.Device.stop_all_notifies">
+<span class="sig-name descname"><span class="pre">stop_all_notifies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/device.html#Device.stop_all_notifies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.device.Device.stop_all_notifies" title="Link to this definition"></a></dt>
+<dd><p>Sets flags for gracefully stopping all notifies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-app_backend.ble_main">Module for handling BLE actions.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_backend.ble_main.</span></span><span class="sig-name descname"><span class="pre">Bluetooth</span></span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth" title="Link to this definition"></a></dt>
+<dd><p>Class for managing BLE functionalities.
+Allows scanning, connecting, disconnecting and using all BLE characteristics.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.scanned_devices">
+<span class="sig-name descname"><span class="pre">scanned_devices</span></span><a class="headerlink" href="#app_backend.ble_main.Bluetooth.scanned_devices" title="Link to this definition"></a></dt>
+<dd><p>list
+all BleakScanner instances</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.client_list">
+<span class="sig-name descname"><span class="pre">client_list</span></span><a class="headerlink" href="#app_backend.ble_main.Bluetooth.client_list" title="Link to this definition"></a></dt>
+<dd><p>list
+all BleakClient class instances</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.client_device_list">
+<span class="sig-name descname"><span class="pre">client_device_list</span></span><a class="headerlink" href="#app_backend.ble_main.Bluetooth.client_device_list" title="Link to this definition"></a></dt>
+<dd><p>list
+all Device class instances</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.nr_of_devices">
+<span class="sig-name descname"><span class="pre">nr_of_devices</span></span><a class="headerlink" href="#app_backend.ble_main.Bluetooth.nr_of_devices" title="Link to this definition"></a></dt>
+<dd><p>int
+number of devices in scanned_devices</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.wifi_clients">
+<span class="sig-name descname"><span class="pre">wifi_clients</span></span><a class="headerlink" href="#app_backend.ble_main.Bluetooth.wifi_clients" title="Link to this definition"></a></dt>
+<dd><p>None, list
+if not None, list contains all devices connected via Wi-Fi to server</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.all_connect">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.all_connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.all_connect" title="Link to this definition"></a></dt>
+<dd><p>Invokes connect function for all scanned devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting connecting single device</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.all_disconnect">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_disconnect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.all_disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.all_disconnect" title="Link to this definition"></a></dt>
+<dd><p>Invokes disconnect function for all connected devices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.on_close">
+<span class="sig-name descname"><span class="pre">on_close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.on_close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.on_close" title="Link to this definition"></a></dt>
+<dd><p>Gracefully stops all BleakClients notifies.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.read_battery">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_battery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.read_battery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.read_battery" title="Link to this definition"></a></dt>
+<dd><p>Reads battery information from device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> – BleakClient, optional</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of MAC address and response from device or list of lists of
+MAC address and response from all clients.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting reading GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.read_config">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.read_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.read_config" title="Link to this definition"></a></dt>
+<dd><p>Reads basic configuration of device by GATT characteristic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> – BleakClient, optional:
+if exists, reads configuration from specified client;
+if it doesn’t exist, reads configuration for all BLE clients</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of MAC address and response from device or list of lists of
+MAC address and response from all clients.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting reading GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.read_dev_info">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_dev_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.read_dev_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.read_dev_info" title="Link to this definition"></a></dt>
+<dd><p>Reads extended info of device by GATT characteristic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> – BleakClient, optional</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of MAC address and response from device or list of lists of
+MAC address and response from all clients.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting reading GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.read_id">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.read_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.read_id" title="Link to this definition"></a></dt>
+<dd><p>Reads ID from device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> – BleakClient</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of MAC address and response from device.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting reading GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.read_name">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.read_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.read_name" title="Link to this definition"></a></dt>
+<dd><p>Reads device name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> – BleakClient</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of MAC address and response from device.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting reading GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.read_update_success">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_update_success</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.read_update_success"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.read_update_success" title="Link to this definition"></a></dt>
+<dd><p>Reads update status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> – BleakClient</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of MAC address and response from device.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting reading GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.read_wifi">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_wifi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.read_wifi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.read_wifi" title="Link to this definition"></a></dt>
+<dd><p>Reads Wi-Fi configuration of device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> – BleakClient, optional</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of MAC address and response from device or list of lists of
+MAC address and response from all clients.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting reading GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.scan">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.scan" title="Link to this definition"></a></dt>
+<dd><p>Scans all devices in advertisement mode and finds only chosen devices;
+makes sure no device is listed more than one time. Updates number of scanned devices</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.single_connect">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">single_connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.single_connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.single_connect" title="Link to this definition"></a></dt>
+<dd><p>Creates and connects BleakClient.</p>
+<p>Creates and adds to list Device instance; if Wi-Fi client already exists,
+pairs up BleakClient wif Wi-Fi client inside Device instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>address</strong> – str
+MAC address of BLE device to connect</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of BleakClient instance and Device instance corresponding to
+returned BleakClient instance.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting connecting</p></li>
+<li><p><strong>single device</strong><strong> or </strong><strong>reading 2 characteristics.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.single_disconnect">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">single_disconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.single_disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.single_disconnect" title="Link to this definition"></a></dt>
+<dd><p>Disconnects BleakClient by address and destroys corresponding
+Device instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>address</strong> – str
+MAC address of BLE device to disconnect</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting disconnecting</p></li>
+<li><p><strong>single device.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.write_action">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.write_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.write_action" title="Link to this definition"></a></dt>
+<dd><p>Writes GATT characteristic for action of device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>action</strong> – int, optional</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting writing</p></li>
+<li><p><strong>GATT service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.write_config">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.write_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.write_config" title="Link to this definition"></a></dt>
+<dd><p>Writes basic configuration and reads same characteristic after.</p>
+<p>Writes basic configuration of device by GATT characteristic and reads
+same characteristic after.
+Sets list of parameters in Device instance corresponding to MAC address</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kwargs</strong></p></li>
+<li><p><strong>client</strong> – BleakClient, optional</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of MAC address and response from device or list of lists of MAC
+address and response from all clients.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting writing GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.write_config_update">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_config_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">firmware</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upd_nr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.write_config_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.write_config_update" title="Link to this definition"></a></dt>
+<dd><p>Writes update parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>firmware</strong> – int</p></li>
+<li><p><strong>upd_nr</strong> – list</p></li>
+<li><p><strong>client</strong> – BleakClient</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If client is defined and value error or exception is caught,
+returns -5.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting writing GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.write_data_action">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_data_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.write_data_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.write_data_action" title="Link to this definition"></a></dt>
+<dd><p>Writes data configuration for device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>action</strong> – int</p></li>
+<li><p><strong>data_type</strong> – int</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting writing GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.write_name">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.write_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.write_name" title="Link to this definition"></a></dt>
+<dd><p>Writes device name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> – BleakClient</p></li>
+<li><p><strong>name</strong> – str</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting writing GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_main.Bluetooth.write_wifi">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_wifi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ssid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'telvis115'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'telvis115'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8090</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakClient</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_main.html#Bluetooth.write_wifi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_main.Bluetooth.write_wifi" title="Link to this definition"></a></dt>
+<dd><p>Writes Wi-Fi configuration to device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ssid</strong> – str</p></li>
+<li><p><strong>psw</strong> – str</p></li>
+<li><p><strong>ip</strong> – list</p></li>
+<li><p><strong>port</strong> – int</p></li>
+<li><p><strong>client</strong> – BleakClient, optional</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If client is defined, returns 0 after completing successfully GATT
+writing.
+Returns -5 if value error or exception is caught.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when awaiting writing GATT</p></li>
+<li><p><strong>service.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-app_backend.wifi_server">Module providing creating and handling TCP server.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_backend.wifi_server.</span></span><span class="sig-name descname"><span class="pre">WiFi</span></span><a class="reference internal" href="_modules/app_backend/wifi_server.html#WiFi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_server.WiFi" title="Link to this definition"></a></dt>
+<dd><p>Class for creating and handle Wi-Fi servers and clients.</p>
+<p>Creates server, listens for clients and allows reading and writing
+to client’s socket buffer. Server does keepAlive checks for idle clients.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.client_flag">
+<span class="sig-name descname"><span class="pre">client_flag</span></span><a class="headerlink" href="#app_backend.wifi_server.WiFi.client_flag" title="Link to this definition"></a></dt>
+<dd><p>bool</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.clients">
+<span class="sig-name descname"><span class="pre">clients</span></span><a class="headerlink" href="#app_backend.wifi_server.WiFi.clients" title="Link to this definition"></a></dt>
+<dd><p>list</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.list_of_threads">
+<span class="sig-name descname"><span class="pre">list_of_threads</span></span><a class="headerlink" href="#app_backend.wifi_server.WiFi.list_of_threads" title="Link to this definition"></a></dt>
+<dd><p>list</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.listening_clients">
+<span class="sig-name descname"><span class="pre">listening_clients</span></span><a class="headerlink" href="#app_backend.wifi_server.WiFi.listening_clients" title="Link to this definition"></a></dt>
+<dd><p>list</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.dev_classes">
+<span class="sig-name descname"><span class="pre">dev_classes</span></span><a class="headerlink" href="#app_backend.wifi_server.WiFi.dev_classes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.s">
+<span class="sig-name descname"><span class="pre">s</span></span><a class="headerlink" href="#app_backend.wifi_server.WiFi.s" title="Link to this definition"></a></dt>
+<dd><p>socket.socket</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when creating and binding</p></li>
+<li><p><strong>socket.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.create_server">
+<span class="sig-name descname"><span class="pre">create_server</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_server.html#WiFi.create_server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_server.WiFi.create_server" title="Link to this definition"></a></dt>
+<dd><p>Listens on socket for new clients.</p>
+<p>Listens for new clients. After catching client, reads header and
+creates connection with BLE client (if exists).
+If client got accepted on new port, every instance is updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when accepting new clients</p></li>
+<li><p><strong>or parsing header.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.listen_on_socket">
+<span class="sig-name descname"><span class="pre">listen_on_socket</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_server.html#WiFi.listen_on_socket"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_server.WiFi.listen_on_socket" title="Link to this definition"></a></dt>
+<dd><p>Creates new thread for every eligible Wi-Fi client.</p>
+<p>Checks if client is already on listen. If not, starts new thread for
+client</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong><strong>, </strong><strong>Exception</strong> – error occurred when creating threads or</p></li>
+<li><p><strong>checking existing threads.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.on_close">
+<span class="sig-name descname"><span class="pre">on_close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_server.html#WiFi.on_close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_server.WiFi.on_close" title="Link to this definition"></a></dt>
+<dd><p>Gracefully joins clients’ threads and closes server.</p>
+<p>Sets flags to graceful ending clients listening, joins clients threads
+and prints number of clients connected
+before closing server. Closes clients sockets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.on_new_client">
+<span class="sig-name descname"><span class="pre">on_new_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_server.html#WiFi.on_new_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_server.WiFi.on_new_client" title="Link to this definition"></a></dt>
+<dd><p>Listens and interprets data</p>
+<p>Listen on established socket buffer. Listens without blocking thread.
+If device is passed, gets configuration data for parsing received data.
+After catching connection error, removes client form list.
+Reacts with graceful and hard disconnect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conn</strong> – socket.socket
+object to send and receive data</p></li>
+<li><p><strong>address</strong> – tuple
+ip address and port received by client</p></li>
+<li><p><strong>device</strong> – Device, optional
+instance of class with BLE and Wi-Fi client references</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ConnectionError</strong> – error occurred on connection between sockets.</p></li>
+<li><p><strong>select.error</strong> – error occurred while waiting on data</p></li>
+<li><p><strong>Exception</strong> – error occurred on parsing data.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.read_response">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_server.html#WiFi.read_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_server.WiFi.read_response" title="Link to this definition"></a></dt>
+<dd><p>Reads data from client</p>
+<p>Reads data on demand with blocking or non-blocking way.
+Reads data from chosen client or all existing clients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeout</strong> – bool
+choose if thread will be blocked while waiting for data</p></li>
+<li><p><strong>client</strong> – socket.socket
+client object to receive data</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>client response or list of clients responses</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ConnectionError</strong> – error occurred on connection status between sockets.</p></li>
+<li><p><strong>socket.error</strong> – error occurred when receiving data.</p></li>
+<li><p><strong>Exception</strong> – error occurred while handling lists</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.wifi_server.WiFi.send_with_response">
+<span class="sig-name descname"><span class="pre">send_with_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_server.html#WiFi.send_with_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_server.WiFi.send_with_response" title="Link to this definition"></a></dt>
+<dd><p>Sends data and waits for response</p>
+<p>Sends data to chosen client (or all available clients) and waits for
+client’s sent data in response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>msg</strong> – bytearray
+data to send</p></li>
+<li><p><strong>client</strong> – socket.socket
+client object to send and receive data</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>client response or list of clients responses</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>socket.error</strong> – error occurred when sending or receiving data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app_backend.wifi_server.calc_crc16">
+<span class="sig-prename descclassname"><span class="pre">app_backend.wifi_server.</span></span><span class="sig-name descname"><span class="pre">calc_crc16</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_arr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_server.html#calc_crc16"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_server.calc_crc16" title="Link to this definition"></a></dt>
+<dd><p>Calculate CRC16 from array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_arr</strong> – bytes
+data to calculate crc16 from</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Calculated CRC.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.Updater">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_frontend.update_toplevel.</span></span><span class="sig-name descname"><span class="pre">Updater</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#Updater"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.Updater" title="Link to this definition"></a></dt>
+<dd><p>Backend for updater window.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.Updater.full_update">
+<span class="sig-name descname"><span class="pre">full_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#Updater.full_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.Updater.full_update" title="Link to this definition"></a></dt>
+<dd><p>Calls main steps of update.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.Updater.run_from_main">
+<span class="sig-name descname"><span class="pre">run_from_main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#Updater.run_from_main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.Updater.run_from_main" title="Link to this definition"></a></dt>
+<dd><p>Set variables if updater was opened from main window after scan.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.Updater.scan">
+<span class="sig-name descname"><span class="pre">scan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#Updater.scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.Updater.scan" title="Link to this definition"></a></dt>
+<dd><p>Sets GUI for scanning and connecting device.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_frontend.update_toplevel.Updater.send_file">
+<span class="sig-name descname"><span class="pre">send_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_frontend/update_toplevel.html#Updater.send_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_frontend.update_toplevel.Updater.send_file" title="Link to this definition"></a></dt>
+<dd><p>Calls function to send file/s to configured device.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-app_backend.ble_char">
+<span id="characteristics"></span><h2>Characteristics<a class="headerlink" href="#module-app_backend.ble_char" title="Link to this heading"></a></h2>
+<p>Module for creation arrays consisting with BLE characteristics.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_backend.ble_char.</span></span><span class="sig-name descname"><span class="pre">Characteristics</span></span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics" title="Link to this definition"></a></dt>
+<dd><p>Class creating arrays for UUIDs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_battery">
+<span class="sig-name descname"><span class="pre">ble_battery</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_battery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_battery" title="Link to this definition"></a></dt>
+<dd><p>Battery state characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_config">
+<span class="sig-name descname"><span class="pre">ble_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">odr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">56</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr_of_meas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dmp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmission</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">odr_div</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_ble</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_wifi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_config" title="Link to this definition"></a></dt>
+<dd><p>Config characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_config_update">
+<span class="sig-name descname"><span class="pre">ble_config_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">firmware</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upd_nr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_config_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_config_update" title="Link to this definition"></a></dt>
+<dd><p>Update config characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_data">
+<span class="sig-name descname"><span class="pre">ble_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_data" title="Link to this definition"></a></dt>
+<dd><p>Data characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_data_action">
+<span class="sig-name descname"><span class="pre">ble_data_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_data_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_data_action" title="Link to this definition"></a></dt>
+<dd><p>Action control characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_dev_info_new">
+<span class="sig-name descname"><span class="pre">ble_dev_info_new</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_dev_info_new"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_dev_info_new" title="Link to this definition"></a></dt>
+<dd><p>New full info characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_dev_info_old">
+<span class="sig-name descname"><span class="pre">ble_dev_info_old</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_dev_info_old"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_dev_info_old" title="Link to this definition"></a></dt>
+<dd><p>Old full info characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_device_id">
+<span class="sig-name descname"><span class="pre">ble_device_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_device_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_device_id" title="Link to this definition"></a></dt>
+<dd><p>Serial and short info characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_device_name">
+<span class="sig-name descname"><span class="pre">ble_device_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_device_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_device_name" title="Link to this definition"></a></dt>
+<dd><p>Device name characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_get_status">
+<span class="sig-name descname"><span class="pre">ble_get_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_get_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_get_status" title="Link to this definition"></a></dt>
+<dd><p>Device state and report characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_set_action">
+<span class="sig-name descname"><span class="pre">ble_set_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">master_slave</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_set_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_set_action" title="Link to this definition"></a></dt>
+<dd><p>Action characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_update_status">
+<span class="sig-name descname"><span class="pre">ble_update_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_update_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_update_status" title="Link to this definition"></a></dt>
+<dd><p>Update status characteristic.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.ble_char.Characteristics.ble_wifi_settings">
+<span class="sig-name descname"><span class="pre">ble_wifi_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ssid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8088</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/ble_char.html#Characteristics.ble_wifi_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.ble_char.Characteristics.ble_wifi_settings" title="Link to this definition"></a></dt>
+<dd><p>Wi-Fi config characteristic.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-app_backend.wifi_char">Module for handling Wi-Fi characteristics.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="app_backend.wifi_char.chunk_characteristic">
+<span class="sig-prename descclassname"><span class="pre">app_backend.wifi_char.</span></span><span class="sig-name descname"><span class="pre">chunk_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packet_nr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packet_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crc16</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_char.html#chunk_characteristic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_char.chunk_characteristic" title="Link to this definition"></a></dt>
+<dd><p>Function handling chunk content.
+:param file_type: int
+:param packet_nr: list
+:param packet_size: int
+:param crc16: int
+:param data: bytearray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of bytes with chunk content.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app_backend.wifi_char.file_characteristic">
+<span class="sig-prename descclassname"><span class="pre">app_backend.wifi_char.</span></span><span class="sig-name descname"><span class="pre">file_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_ver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crc32</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/wifi_char.html#file_characteristic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.wifi_char.file_characteristic" title="Link to this definition"></a></dt>
+<dd><p>Function handling file settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_type</strong> – int</p></li>
+<li><p><strong>file_ver</strong> – list</p></li>
+<li><p><strong>file_size</strong> – int</p></li>
+<li><p><strong>crc32</strong> – int</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of bytes with information about file configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-app_backend.parser">
+<span id="helper-classes-and-functionalities"></span><h2>Helper classes and functionalities<a class="headerlink" href="#module-app_backend.parser" title="Link to this heading"></a></h2>
+<p>Accessory function for standardization of data parsing.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="app_backend.parser.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">app_backend.parser.</span></span><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/parser.html#Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.parser.Data" title="Link to this definition"></a></dt>
+<dd><p>Handling data array.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.parser.Data.decode_data_frames">
+<span class="sig-name descname"><span class="pre">decode_data_frames</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/parser.html#Data.decode_data_frames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.parser.Data.decode_data_frames" title="Link to this definition"></a></dt>
+<dd><p>Decoding data with timestamp for every frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="app_backend.parser.Data.decode_data_packets">
+<span class="sig-name descname"><span class="pre">decode_data_packets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/parser.html#Data.decode_data_packets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.parser.Data.decode_data_packets" title="Link to this definition"></a></dt>
+<dd><p>Decoding data with timestamp for packet.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app_backend.parser.meas_data_parser">
+<span class="sig-prename descclassname"><span class="pre">app_backend.parser.</span></span><span class="sig-name descname"><span class="pre">meas_data_parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/app_backend/parser.html#meas_data_parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#app_backend.parser.meas_data_parser" title="Link to this definition"></a></dt>
+<dd><p>Parse measurement data based on configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – list[int]
+data to parse</p></li>
+<li><p><strong>conf</strong> – list[int]
+parameters to choose type of parser</p></li>
+<li><p><strong>device</strong> – str
+MAC address of device (BLE)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p id="module-logger_set">Settings for logging over all files.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="BLE and TCP app documentation (v. 0.0.2 )" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="frontend.html" class="btn btn-neutral float-right" title="Frontend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,421 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_frontend.gui_main &mdash; BLE and TCP app 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app_frontend.gui_main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app_frontend.gui_main</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Main class for creating and handling GUI. &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">tkinter</span>
+
+<span class="kn">from</span> <span class="nn">bleak.backends.winrt.util</span> <span class="kn">import</span> <span class="n">allow_sta</span>
+<span class="kn">import</span> <span class="nn">customtkinter</span>
+
+<span class="kn">from</span> <span class="nn">app_backend.gui_backend</span> <span class="kn">import</span> <span class="n">AppFnc</span>
+<span class="kn">from</span> <span class="nn">app_frontend.gui_frames</span> <span class="kn">import</span> <span class="n">DeviceFrame</span>
+<span class="kn">from</span> <span class="nn">app_frontend.toplevel_waiting</span> <span class="kn">import</span> <span class="n">ToplevelWindow</span>
+<span class="kn">from</span> <span class="nn">app_frontend.update_toplevel</span> <span class="kn">import</span> <span class="n">UpdateWindow</span>
+<span class="kn">from</span> <span class="nn">app_frontend.window_shared_utils</span> <span class="kn">import</span> <span class="n">set_geometry</span>
+
+<span class="kn">from</span> <span class="nn">logger_set</span> <span class="kn">import</span> <span class="n">logger</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">coinit_flags</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 0 means MTA</span>
+
+
+<div class="viewcode-block" id="App">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App">[docs]</a>
+<span class="k">class</span> <span class="nc">App</span><span class="p">(</span><span class="n">customtkinter</span><span class="o">.</span><span class="n">CTk</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Class for handling all GUI frontend. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">w</span> <span class="o">=</span> <span class="mi">1200</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="mi">800</span>
+
+        <span class="n">set_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;App&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span> <span class="o">=</span> <span class="n">AppFnc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ble</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">ble</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wifi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">wifi</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_upd</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># add widgets to app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons_frame</span> <span class="o">=</span> <span class="n">customtkinter</span><span class="o">.</span><span class="n">CTkFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons_frame</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">fg_color</span><span class="o">=</span><span class="s1">&#39;transparent&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons_frame</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">textbox</span> <span class="o">=</span> <span class="n">customtkinter</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                                <span class="n">corner_radius</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">wrap</span><span class="o">=</span><span class="s1">&#39;word&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span> <span class="o">=</span> <span class="n">DeviceFrame</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">create_device_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_btn</span> <span class="o">=</span> <span class="n">customtkinter</span><span class="o">.</span><span class="n">CTkButton</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">buttons_frame</span><span class="p">,</span>
+                                                <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Scan&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_btn_scan</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_btn</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_btn</span> <span class="o">=</span> <span class="n">customtkinter</span><span class="o">.</span><span class="n">CTkButton</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buttons_frame</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Do update&quot;</span><span class="p">,</span>
+                                                  <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_open_update_window</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_btn</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">allow_sta</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">(</span><span class="s2">&quot;WM_DELETE_WINDOW&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_exit</span><span class="p">)</span>
+
+    <span class="c1"># add methods to app</span>
+<div class="viewcode-block" id="App.on_exit">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.on_exit">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Called when window is closed. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">on_close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_btn_scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Set all GUI elements on scan. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">textbox</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;0.0&#39;</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">unpack_bts</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">create_device_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">withdraw</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_toplevel</span><span class="p">(</span><span class="s2">&quot;Please wait! I&#39;m scanning!&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">scan</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">deiconify</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_device</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_device_frame_pack</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">pack_connection_bts</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">create_boxes</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">pack_conf_box</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+<div class="viewcode-block" id="App.one_connect">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.one_connect">[docs]</a>
+    <span class="k">def</span> <span class="nf">one_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for device connect. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">pack_conf_box</span><span class="p">()</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">one_connect</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">client</span></div>
+
+
+<div class="viewcode-block" id="App.one_disconnect">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.one_disconnect">[docs]</a>
+    <span class="k">def</span> <span class="nf">one_disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for device disconnect. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">one_disconnect</span><span class="p">(</span><span class="n">address</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App.get_config">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.get_config">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for getting device config. &quot;&quot;&quot;</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">get_conf</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="App.set_config">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.set_config">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for setting device config. &quot;&quot;&quot;</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">set_conf</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textbox</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;0.0&#39;</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="n">address</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">element</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirector</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">address</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, (config): &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirector</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">get_battery</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="n">address</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">element</span>
+            <span class="n">list_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirector</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">address</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, (battery): &quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirector</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">list_data</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App.get_device_info">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.get_device_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_device_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for setting full device info. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">get_device_info</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="App.get_wifi">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.get_wifi">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_wifi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for getting Wi-Fi config. &quot;&quot;&quot;</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">get_wifi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">textbox</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;0.0&#39;</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="n">address</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">element</span>
+            <span class="n">ssid</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">32</span><span class="p">]])</span>
+            <span class="n">ssid</span> <span class="o">=</span> <span class="n">ssid</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span>
+            <span class="n">psw</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">64</span><span class="p">]])</span>
+            <span class="n">psw</span> <span class="o">=</span> <span class="n">psw</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span>
+
+            <span class="n">decoded_response</span> <span class="o">=</span> <span class="p">[</span><span class="n">ssid</span><span class="p">,</span> <span class="n">psw</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">80</span><span class="p">):</span>
+                <span class="n">decoded_response</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirector</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">address</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, (wifi):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirector</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">decoded_response</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redirector</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App.set_wifi">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.set_wifi">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_wifi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for setting Wi-Fi config. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">set_wifi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_wifi</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="App.get_device_ids">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.get_device_ids">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_device_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for getting device&#39;s serial info. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">get_device_ids</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="App.cmd_conn_wifi">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.cmd_conn_wifi">[docs]</a>
+    <span class="k">def</span> <span class="nf">cmd_conn_wifi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for sending Wi-Fi connect action. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">box_start_stop</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">tkinter</span><span class="o">.</span><span class="n">DISABLED</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span><span class="s2">&quot;connect_wifi&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">box_start_stop</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">tkinter</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App.synchronize">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.synchronize">[docs]</a>
+    <span class="k">def</span> <span class="nf">synchronize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for sending Wi-Fi connect action. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span><span class="s2">&quot;synchronize&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App.identify">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.identify">[docs]</a>
+    <span class="k">def</span> <span class="nf">identify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for sending identify action. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span><span class="s2">&quot;identify&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App.turn_off">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.turn_off">[docs]</a>
+    <span class="k">def</span> <span class="nf">turn_off</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for sending turning off action. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span><span class="s2">&quot;turn_off&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App.reset">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for sending reset action. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span><span class="s2">&quot;reset&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App.start_data">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.start_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">start_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for sending start data action. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">start_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="App.stop_data">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.stop_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">stop_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls backend for sending stop data action. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">back_app</span><span class="o">.</span><span class="n">stop_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="App.redirector">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.redirector">[docs]</a>
+    <span class="k">def</span> <span class="nf">redirector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sets text in textbox. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">textbox</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">input_str</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_print_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sets all scanned devices in textbox. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">textbox</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">after</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">buttons_frame</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+                              <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">dev</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">redirector</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dev</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dev</span><span class="o">.</span><span class="n">address</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Empty device list&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_device_frame_pack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Pack GUI part. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">after</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">textbox</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                               <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_frame</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">fg_color</span><span class="o">=</span><span class="s1">&#39;transparent&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="App.open_toplevel">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.gui_main.App.open_toplevel">[docs]</a>
+    <span class="k">def</span> <span class="nf">open_toplevel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sets waiter window. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">winfo_exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span> <span class="o">=</span> <span class="n">ToplevelWindow</span><span class="p">()</span>
+            <span class="c1"># create window if its None or destroyed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">string</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">deiconify</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>  <span class="c1"># if window exists focus it</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_open_update_window</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Opens updater window and hides main window. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_upd</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_upd</span><span class="o">.</span><span class="n">winfo_exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window_upd</span> <span class="o">=</span> <span class="n">UpdateWindow</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">withdraw</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">window_upd</span><span class="o">.</span><span class="n">run_from_main</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">window_upd</span><span class="o">.</span><span class="n">gui_elements</span><span class="p">[</span><span class="s2">&quot;scan_btn&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                              <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                                                              <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
+                                                              <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                                                              <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

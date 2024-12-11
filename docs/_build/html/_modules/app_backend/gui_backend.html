@@ -1,0 +1,417 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_backend.gui_backend &mdash; BLE and TCP app 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app_backend.gui_backend</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app_backend.gui_backend</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Main GUI class. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="kn">from</span> <span class="nn">bleak</span> <span class="kn">import</span> <span class="n">BleakClient</span>
+
+<span class="kn">from</span> <span class="nn">app_frontend.window_id</span> <span class="kn">import</span> <span class="n">WindowDeviceID</span>
+<span class="kn">from</span> <span class="nn">app_frontend.window_info</span> <span class="kn">import</span> <span class="n">WindowFullInfo</span>
+
+<span class="kn">from</span> <span class="nn">logger_set</span> <span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span> <span class="nn">.ble_main</span> <span class="kn">import</span> <span class="n">Bluetooth</span>
+<span class="kn">from</span> <span class="nn">.wifi_server</span> <span class="kn">import</span> <span class="n">WiFi</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">app_frontend.gui_main</span> <span class="kn">import</span> <span class="n">App</span>
+
+
+<div class="viewcode-block" id="AppFnc">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc">[docs]</a>
+<span class="k">class</span> <span class="nc">AppFnc</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Class handling backend for GUI.</span>
+
+<span class="sd">        Calls every external backend class or function to relieve GUI code.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            master: App</span>
+<span class="sd">            ble: Ble</span>
+<span class="sd">            wifi: WiFi</span>
+<span class="sd">            wifi_response: threading.Thread</span>
+<span class="sd">            loop: coroutine</span>
+<span class="sd">            transmission_type: int</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">:</span> <span class="n">App</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">master</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ble</span> <span class="o">=</span> <span class="n">Bluetooth</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wifi</span> <span class="o">=</span> <span class="n">WiFi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">wifi_clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">clients</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wifi_response</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">create_server</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wifi_response</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmission_type</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="AppFnc.on_close">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.on_close">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function called when closing GUI.</span>
+
+<span class="sd">        Gracefully ends all processes on BLE and TCP.</span>
+<span class="sd">        Prints last BLE measurement (if exists).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">client_device_list</span><span class="p">:</span>
+            <span class="n">dev</span> <span class="o">=</span> <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">data_notify</span> <span class="o">=</span> <span class="n">dev</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="k">if</span> <span class="n">data_notify</span><span class="p">:</span>
+                <span class="n">local_time</span> <span class="o">=</span> <span class="n">data_notify</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">mac</span> <span class="o">=</span> <span class="n">data_notify</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data_notify</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Device </span><span class="si">%s</span><span class="s2"> on close: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">mac</span><span class="p">,</span> <span class="n">local_time</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">on_close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">on_close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.scan">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.scan">[docs]</a>
+    <span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Runs BLE scanner. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">scan</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.one_connect">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.one_connect">[docs]</a>
+    <span class="k">def</span> <span class="nf">one_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls connect function on BLE device.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            [BleakClient, Device] or [None, None] when error is caught.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop</span>
+        <span class="k">while</span> <span class="n">loop</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">single_connect</span><span class="p">(</span><span class="n">address</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">dev_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">client_device_list</span>
+        <span class="k">return</span> <span class="n">client</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.one_disconnect">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.one_disconnect">[docs]</a>
+    <span class="k">def</span> <span class="nf">one_disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls disconnect function on BLE device. &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop</span>
+        <span class="k">while</span> <span class="n">loop</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">single_disconnect</span><span class="p">(</span><span class="n">address</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.get_conf">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.get_conf">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_conf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls reading device config on all BLE devices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of responses like: [address, config]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_config</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.set_conf">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.set_conf">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_conf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls writing and reading device config on all BLE devices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of responses like: [address, config]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_config</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_conf</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">element</span>
+            <span class="n">list_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">transmission_type</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_type</span> <span class="o">!=</span> <span class="n">transmission_type</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transmission_type</span> <span class="o">=</span> <span class="n">transmission_type</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.get_device_info">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.get_device_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_device_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls GUI for handling device full info. &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_dev_info</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="n">device_info</span> <span class="o">=</span> <span class="n">WindowFullInfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="p">)</span>
+            <span class="n">device_info</span><span class="o">.</span><span class="n">lift</span><span class="p">()</span>
+            <span class="n">device_info</span><span class="o">.</span><span class="n">show_info</span><span class="p">(</span><span class="n">element</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.get_wifi">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.get_wifi">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_wifi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls reading Wi-Fi config on all BLE devices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of responses like: [address, Wi-Fi config]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_wifi</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.set_wifi">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.set_wifi">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_wifi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls writing Wi-Fi config on all BLE devices. &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_wifi</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.get_device_ids">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.get_device_ids">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_device_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls GUI for handling device serial info. &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+            <span class="n">WindowDeviceID</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.get_battery">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.get_battery">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_battery</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls reading battery info on all BLE devices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of responses like: [address, battery info]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_battery</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.get_id">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.get_id">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls reading serial info on BLE client.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            response like: [address, battery info]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_id</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.get_name">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.get_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls reading device name on BLE client.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            response like: [address, battery info]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_name</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.set_name">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.set_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BleakClient</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls writing and reading device name on BLE client.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            response like: [address, name]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_name</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_name</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.set_action">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.set_action">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Invokes action based on string argument. &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="k">match</span> <span class="n">action_type</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">&quot;identify&quot;</span><span class="p">:</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+            <span class="k">case</span> <span class="s2">&quot;connect_wifi&quot;</span><span class="p">:</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+            <span class="k">case</span> <span class="s2">&quot;synchronize&quot;</span><span class="p">:</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+            <span class="k">case</span> <span class="s2">&quot;turn_off&quot;</span><span class="p">:</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+            <span class="k">case</span> <span class="s2">&quot;reset&quot;</span><span class="p">:</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mi">6</span><span class="p">))</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">pass</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_wifi_listen_clients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Invokes thread for awaiting on TCP server. &quot;&quot;&quot;</span>
+
+        <span class="n">listening_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">listen_on_socket</span><span class="p">(),</span>
+                                            <span class="n">args</span><span class="o">=</span><span class="p">(),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">listening_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<div class="viewcode-block" id="AppFnc.start_data">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.start_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">start_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Invokes start of data receiving via BLE or TCP. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_config</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">element</span>
+                <span class="n">list_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">transmission_type</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_type</span> <span class="o">!=</span> <span class="n">transmission_type</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transmission_type</span> <span class="o">=</span> <span class="n">transmission_type</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_type</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># WiFi</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wifi_listen_clients</span><span class="p">()</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_data_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mh">0x01</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="AppFnc.stop_data">
+<a class="viewcode-back" href="../../backend.html#app_backend.gui_backend.AppFnc.stop_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">stop_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Invokes stop of data receiving. &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_data_action</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="mh">0x00</span><span class="p">))</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

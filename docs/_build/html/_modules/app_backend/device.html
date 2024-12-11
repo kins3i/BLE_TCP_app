@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_backend.device &mdash; BLE and TCP app 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app_backend.device</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app_backend.device</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Module for joining Bleak and TCP client. &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">dataclasses</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">from</span> <span class="nn">bleak</span> <span class="kn">import</span> <span class="n">BleakGATTCharacteristic</span>
+
+<span class="kn">from</span> <span class="nn">logger_set</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.ble_char</span> <span class="kn">import</span> <span class="n">Characteristics</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.ble_char_template</span> <span class="kn">import</span> <span class="n">Characteristics</span>
+<span class="kn">from</span> <span class="nn">.parser</span> <span class="kn">import</span> <span class="n">meas_data_parser</span>
+
+
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span> <span class="nc">_Notify</span><span class="p">:</span>
+    <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">order</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span>
+        <span class="p">[</span><span class="n">BleakGATTCharacteristic</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span>
+    <span class="p">]</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">data</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">_data</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Notify content.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+
+    <span class="nd">@data</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="Device">
+<a class="viewcode-back" href="../../backend.html#app_backend.device.Device">[docs]</a>
+<span class="k">class</span> <span class="nc">Device</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Class for connecting BLE and Wi-Fi client and managing notifies.</span>
+
+<span class="sd">    Allows connecting BLE client with Wi-Fi client, manages notifies and parses</span>
+<span class="sd">    measurement data.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        client_ble: BleakClient</span>
+<span class="sd">        address_ble: list[int]</span>
+<span class="sd">        address_wifi: list[int]</span>
+<span class="sd">        mac_ble: str</span>
+<span class="sd">        mac_wifi: str</span>
+<span class="sd">        client_wifi</span>
+<span class="sd">        chars: Characteristics</span>
+<span class="sd">        notifies: list[_Notify]</span>
+<span class="sd">        iter_upd_status: int</span>
+<span class="sd">        _stop_flag: bool</span>
+<span class="sd">        configure: None, list</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client_ble</span><span class="p">,</span> <span class="n">address_ble</span><span class="p">,</span> <span class="n">address_wifi</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span> <span class="o">=</span> <span class="n">client_ble</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_ble</span> <span class="o">=</span> <span class="n">address_ble</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_wifi</span> <span class="o">=</span> <span class="n">address_wifi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mac_ble</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_ble</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_ble</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_ble</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_ble</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_ble</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_ble</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mac_wifi</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_wifi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_wifi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_wifi</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_wifi</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_wifi</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address_wifi</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_wifi</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chars</span> <span class="o">=</span> <span class="n">Characteristics</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">_Notify</span><span class="p">(</span><span class="n">flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">data</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_get_status</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dev_status_callback</span><span class="p">,</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;dev status&quot;</span><span class="p">),</span>
+            <span class="n">_Notify</span><span class="p">(</span><span class="n">flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">data</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_data</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_callback</span><span class="p">,</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">),</span>
+            <span class="n">_Notify</span><span class="p">(</span><span class="n">flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">data</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chars</span><span class="o">.</span><span class="n">ble_update_status</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_status_callback</span><span class="p">,</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;update status&quot;</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_upd_status</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stop_flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;BLE MAC: </span><span class="si">%s</span><span class="s2">, Wi-Fi MAC: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_notifies</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Device.get_update_status_notify">
+<a class="viewcode-back" href="../../backend.html#app_backend.device.Device.get_update_status_notify">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_update_status_notify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns update status list. &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="Device.start_notifies">
+<a class="viewcode-back" href="../../backend.html#app_backend.device.Device.start_notifies">[docs]</a>
+    <span class="k">def</span> <span class="nf">start_notifies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Starts all notify readings.</span>
+
+<span class="sd">        Starts and awaits on all notifies from devices.</span>
+<span class="sd">        Every notify is awaited in different thread.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">listening_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">async_device_status</span><span class="p">,</span>
+                                            <span class="n">args</span><span class="o">=</span><span class="p">(),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">listening_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="n">listening_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">async_data</span><span class="p">,</span>
+                                            <span class="n">args</span><span class="o">=</span><span class="p">(),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">listening_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="n">listening_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">async_update_status</span><span class="p">,</span>
+                                            <span class="n">args</span><span class="o">=</span><span class="p">(),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">listening_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_dev_status_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender</span><span class="p">:</span> <span class="n">BleakGATTCharacteristic</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">):</span>  <span class="c1"># N</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Called each time device status appears.</span>
+
+<span class="sd">        Prints data received via device status notify.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_</span> <span class="o">=</span> <span class="n">sender</span>
+
+        <span class="n">list_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x05</span><span class="p">:</span>
+            <span class="n">time_b</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">time_int</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">time_b</span><span class="p">,</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data: </span><span class="si">%s</span><span class="s2">, time: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">list_data</span><span class="p">,</span> <span class="n">time_int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">list_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_data_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender</span><span class="p">:</span> <span class="n">BleakGATTCharacteristic</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">):</span>  <span class="c1"># N</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Called each time data appears.</span>
+
+<span class="sd">        Gets and parses data received via data notify.</span>
+<span class="sd">        Data returned form parser is set into list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_</span> <span class="o">=</span> <span class="n">sender</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">configure</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">meas_data_parser</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">configure</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">resp</span><span class="p">:</span>
+                <span class="n">date</span><span class="p">,</span> <span class="n">mac</span><span class="p">,</span> <span class="n">print_str</span> <span class="o">=</span> <span class="n">resp</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mac</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">print_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update_status_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender</span><span class="p">:</span> <span class="n">BleakGATTCharacteristic</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">):</span>  <span class="c1"># N</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Called each time update status appears.</span>
+
+<span class="sd">        Prints data received via update status notify.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_</span> <span class="o">=</span> <span class="n">sender</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_upd_status</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Status Data: </span><span class="si">%s</span><span class="s2">, iteration: </span><span class="si">%s</span><span class="s2"> &quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_upd_status</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">]</span>
+        <span class="c1"># self.n_5005_data.append(data)</span>
+
+    <span class="k">def</span> <span class="nf">_handler_disconnected_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_all_notifies</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_handle_notifies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notif_class</span><span class="p">:</span> <span class="n">_Notify</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Starts update status notify.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            0, if notify stopped correctly; -5 if value error or exception is caught.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when awaiting notify GATT service.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># flag = notif_class.flag</span>
+        <span class="c1"># order = notif_class.order</span>
+        <span class="c1"># callback = notif_class.callback</span>
+
+        <span class="n">notif_class</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="o">.</span><span class="n">is_connected</span> <span class="ow">and</span> <span class="n">notif_class</span><span class="o">.</span><span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="o">.</span><span class="n">start_notify</span><span class="p">(</span><span class="n">notif_class</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">notif_class</span><span class="o">.</span><span class="n">callback</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Started notify </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">notif_class</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">notif_class</span><span class="o">.</span><span class="n">flag</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="o">.</span><span class="n">stop_notify</span><span class="p">(</span><span class="n">notif_class</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client disconnected too early&quot;</span><span class="p">)</span>
+                        <span class="k">break</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="o">.</span><span class="n">is_connected</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_handler_disconnected_device</span><span class="p">()</span>
+                        <span class="k">break</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_stop_flag</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Stopped notify </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">notif_class</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error in notify </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">notif_class</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_handler_disconnected_device</span><span class="p">()</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">5</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client: </span><span class="si">%s</span><span class="s2"> not connected&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">address_ble</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Device.async_device_status">
+<a class="viewcode-back" href="../../backend.html#app_backend.device.Device.async_device_status">[docs]</a>
+    <span class="k">def</span> <span class="nf">async_device_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Starts asyncio loop for device status notify. &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle_notifies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="Device.async_data">
+<a class="viewcode-back" href="../../backend.html#app_backend.device.Device.async_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">async_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Starts asyncio loop for data notify. &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle_notifies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="Device.async_update_status">
+<a class="viewcode-back" href="../../backend.html#app_backend.device.Device.async_update_status">[docs]</a>
+    <span class="k">def</span> <span class="nf">async_update_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Starts asyncio loop for update status notify. &quot;&quot;&quot;</span>
+
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle_notifies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="Device.stop_all_notifies">
+<a class="viewcode-back" href="../../backend.html#app_backend.device.Device.stop_all_notifies">[docs]</a>
+    <span class="k">def</span> <span class="nf">stop_all_notifies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sets flags for gracefully stopping all notifies.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stop_flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">notif</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifies</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stop_flag</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">notif</span><span class="o">.</span><span class="n">flag</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stop_flag</span><span class="p">:</span>
+                <span class="k">continue</span>
+        <span class="k">return</span> <span class="mi">1</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

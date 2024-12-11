@@ -1,0 +1,214 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_backend.parser &mdash; BLE and TCP app 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app_backend.parser</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app_backend.parser</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Accessory function for standardization of data parsing. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+
+<span class="kn">from</span> <span class="nn">logger_set</span> <span class="kn">import</span> <span class="n">logger</span>
+
+
+<div class="viewcode-block" id="meas_data_parser">
+<a class="viewcode-back" href="../../backend.html#app_backend.parser.meas_data_parser">[docs]</a>
+<span class="k">def</span> <span class="nf">meas_data_parser</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Parse measurement data based on configuration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data: list[int]</span>
+<span class="sd">            data to parse</span>
+<span class="sd">        conf: list[int]</span>
+<span class="sd">            parameters to choose type of parser</span>
+<span class="sd">        device: str</span>
+<span class="sd">            MAC address of device (BLE)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">conf</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">conf</span>
+        <span class="n">timestamp_option</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">packet_nr</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">battery</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">timestamp_option</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">:</span>
+            <span class="n">data_obj</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+            <span class="c1"># timestamp, list_of_frames = data_obj.decode_data_packets()</span>
+            <span class="n">timestamp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">decode_data_packets</span><span class="p">()</span>
+            <span class="n">print_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;(DEVICE: </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">) Packet nr: </span><span class="si">{</span><span class="n">packet_nr</span><span class="si">}</span><span class="s2">, &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;battery: </span><span class="si">{</span><span class="n">battery</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">battery</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">; &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;timestamp: </span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">print_str</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">device</span><span class="p">,</span> <span class="n">print_str</span>
+
+        <span class="k">if</span> <span class="n">timestamp_option</span> <span class="o">==</span> <span class="mh">0x01</span><span class="p">:</span> <span class="c1"># timestamp_option == 0x01:</span>
+            <span class="n">data_obj</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+            <span class="c1"># list_of_frames = data_obj.decode_data_frames()</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">decode_data_frames</span><span class="p">()</span>
+            <span class="n">print_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Packet nr: </span><span class="si">{</span><span class="n">packet_nr</span><span class="si">}</span><span class="s2">, battery: &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">battery</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">battery</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">print_str</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">device</span><span class="p">,</span> <span class="n">print_str</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="s2">&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Data">
+<a class="viewcode-back" href="../../backend.html#app_backend.parser.Data">[docs]</a>
+<span class="k">class</span> <span class="nc">Data</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Handling data array.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_option</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meas_number</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="c1"># noinspection SpellCheckingInspection</span>
+<div class="viewcode-block" id="Data.decode_data_packets">
+<a class="viewcode-back" href="../../backend.html#app_backend.parser.Data.decode_data_packets">[docs]</a>
+    <span class="k">def</span> <span class="nf">decode_data_packets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Decoding data with timestamp for packet.&quot;&quot;&quot;</span>
+
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">packet_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">list_of_frames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meas_number</span><span class="p">):</span>
+            <span class="n">frame_data</span> <span class="o">=</span> <span class="n">packet_data</span><span class="p">[</span><span class="mi">28</span> <span class="o">*</span> <span class="n">i</span><span class="p">:</span> <span class="mi">28</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">floats_frame</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&lt;fffffff&#39;</span><span class="p">,</span> <span class="n">frame_data</span><span class="p">)</span>
+            <span class="n">q0</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">q1</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">q2</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">q3</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="n">ay</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">az</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+            <span class="n">parsed_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">q0</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">,</span> <span class="n">az</span><span class="p">]</span>
+            <span class="n">list_of_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parsed_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">list_of_frames</span><span class="p">]</span></div>
+
+
+    <span class="c1"># noinspection SpellCheckingInspection</span>
+<div class="viewcode-block" id="Data.decode_data_frames">
+<a class="viewcode-back" href="../../backend.html#app_backend.parser.Data.decode_data_frames">[docs]</a>
+    <span class="k">def</span> <span class="nf">decode_data_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Decoding data with timestamp for every frame.&quot;&quot;&quot;</span>
+
+        <span class="n">packet_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">list_of_frames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meas_number</span><span class="p">):</span>
+            <span class="n">frame_data</span> <span class="o">=</span> <span class="n">packet_data</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="n">i</span><span class="p">:</span> <span class="mi">32</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">floats_frame</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&lt;Ifffffff&#39;</span><span class="p">,</span> <span class="n">frame_data</span><span class="p">)</span>
+            <span class="c1"># timestamp = int.from_bytes(frame_data[0:4] ,&#39;little&#39;, signed=False)</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">q0</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">q1</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">q2</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">q3</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">ay</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+            <span class="n">az</span> <span class="o">=</span> <span class="n">floats_frame</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+            <span class="n">parsed_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">q0</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">,</span> <span class="n">az</span><span class="p">]</span>
+            <span class="n">list_of_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parsed_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">list_of_frames</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,871 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_frontend.update_toplevel &mdash; BLE and TCP app 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app_frontend.update_toplevel</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app_frontend.update_toplevel</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Class for creating updater GUI and handling update process. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">dataclasses</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">filedialog</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">zlib</span>
+
+<span class="kn">import</span> <span class="nn">customtkinter</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">app_backend.wifi_char</span> <span class="kn">import</span> <span class="n">file_characteristic</span><span class="p">,</span> <span class="n">chunk_characteristic</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">app_backend.wifi_char_template</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">file_characteristic</span><span class="p">,</span>
+        <span class="n">chunk_characteristic</span>
+    <span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">app_frontend.window_shared_utils</span> <span class="kn">import</span> <span class="n">set_geometry</span>
+<span class="kn">from</span> <span class="nn">logger_set</span> <span class="kn">import</span> <span class="n">logger</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">app_frontend.gui_main</span> <span class="kn">import</span> <span class="n">App</span>
+
+<span class="n">CHUNK_SIZE</span> <span class="o">=</span> <span class="mi">1400</span>
+
+
+<span class="k">def</span> <span class="nf">find_file</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Get file path from file system. &quot;&quot;&quot;</span>
+
+    <span class="n">start_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;C:/&quot;</span><span class="p">,</span> <span class="s2">&quot;Users&quot;</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">filedialog</span><span class="o">.</span><span class="n">askopenfilename</span><span class="p">(</span><span class="n">initialdir</span><span class="o">=</span><span class="n">start_path</span><span class="p">,</span>
+                                      <span class="n">filetypes</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;Binary files&#39;</span><span class="p">,</span> <span class="s1">&#39;.bin&#39;</span><span class="p">)],</span>
+                                      <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span> <span class="nf">calc_crc16</span><span class="p">(</span><span class="n">crc_input</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">input_arr</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Calculate crc16 of given data. &quot;&quot;&quot;</span>
+
+    <span class="n">crc</span> <span class="o">=</span> <span class="n">crc_input</span>
+    <span class="n">data_bytes</span> <span class="o">=</span> <span class="n">input_arr</span><span class="p">[:]</span>
+    <span class="n">data_bytes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">data_bytes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">data_bytes</span><span class="p">:</span>
+        <span class="n">temp_byte</span> <span class="o">=</span> <span class="n">b</span> <span class="o">|</span> <span class="mh">0x100</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">temp_byte</span> <span class="o">&amp;</span> <span class="mh">0x10000</span><span class="p">:</span>
+            <span class="n">crc</span> <span class="o">=</span> <span class="n">crc</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
+            <span class="n">temp_byte</span> <span class="o">=</span> <span class="n">temp_byte</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">temp_byte</span> <span class="o">&amp;</span> <span class="mh">0x100</span><span class="p">:</span>
+                <span class="n">crc</span> <span class="o">=</span> <span class="n">crc</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">crc</span> <span class="o">&amp;</span> <span class="mh">0x10000</span><span class="p">:</span>
+                <span class="n">crc</span> <span class="o">=</span> <span class="n">crc</span> <span class="o">^</span> <span class="mh">0x1021</span>
+        <span class="n">crc</span> <span class="o">=</span> <span class="n">crc</span> <span class="o">&amp;</span> <span class="mh">0xffff</span>
+
+    <span class="k">return</span> <span class="n">crc</span>
+
+
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span> <span class="nc">_File</span><span class="p">:</span>
+    <span class="n">crc32_ble</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">file_arr_ble</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">file_size_ble</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">crc32_wifi</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">file_arr_wifi</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">file_size_wifi</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="UpdateWindow">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.update_toplevel.UpdateWindow">[docs]</a>
+<span class="k">class</span> <span class="nc">UpdateWindow</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">CTkToplevel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; GUI and backend for device updater. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">:</span> <span class="n">App</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">w</span> <span class="o">=</span> <span class="mi">800</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="mi">600</span>
+
+        <span class="n">set_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Updater&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">master</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Updater</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_type_var</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">StringVar</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version_var</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">StringVar</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;0.0.0&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ct</span><span class="o">.</span><span class="n">CTkFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
+            <span class="n">ct</span><span class="o">.</span><span class="n">CTkFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gui_elements</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;file_type_label&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkLabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                           <span class="n">text</span><span class="o">=</span><span class="s2">&quot;File type&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;file_type_box&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkComboBox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;BLE module&quot;</span><span class="p">,</span> <span class="s2">&quot;WiFi module&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">],</span>
+                                            <span class="n">variable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_type_var</span><span class="p">,</span>
+                                            <span class="n">state</span><span class="o">=</span><span class="s1">&#39;readonly&#39;</span><span class="p">),</span>
+            <span class="s2">&quot;textbox&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                     <span class="n">width</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                                     <span class="n">corner_radius</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                     <span class="n">wrap</span><span class="o">=</span><span class="s1">&#39;word&#39;</span><span class="p">),</span>
+            <span class="s2">&quot;scan_btn&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                     <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Scan and connect&quot;</span><span class="p">,</span>
+                                     <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="p">),</span>
+            <span class="s2">&quot;version_label&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkLabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Update version&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkEntry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                   <span class="n">placeholder_text</span><span class="o">=</span><span class="s2">&quot;Update version&quot;</span><span class="p">,</span>
+                                   <span class="n">textvariable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version_var</span><span class="p">),</span>
+            <span class="s2">&quot;submit&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                   <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Send&quot;</span><span class="p">,</span>
+                                   <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">send_file</span><span class="p">),</span>
+            <span class="s2">&quot;start_update_btn&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                             <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Start update&quot;</span><span class="p">,</span>
+                                             <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">full_update</span><span class="p">),</span>
+            <span class="s2">&quot;go_main_btn&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                        <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Go to main app&quot;</span><span class="p">,</span>
+                                        <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">go_main</span><span class="p">)</span>
+        <span class="p">}</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">(</span><span class="s2">&quot;WM_DELETE_WINDOW&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_exit</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UpdateWindow.on_exit">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.update_toplevel.UpdateWindow.on_exit">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Called when window is closed. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="UpdateWindow.go_main">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.update_toplevel.UpdateWindow.go_main">[docs]</a>
+    <span class="k">def</span> <span class="nf">go_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Closes window and go backs to main window. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">deiconify</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="UpdateWindow.run_from_main">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.update_toplevel.UpdateWindow.run_from_main">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_from_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Set variables if updater was opened from main window after scan. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">run_from_main</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="UpdateWindow.scan">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.update_toplevel.UpdateWindow.scan">[docs]</a>
+    <span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sets GUI for scanning and connecting device. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">scan</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="UpdateWindow.full_update">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.update_toplevel.UpdateWindow.full_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">full_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls main steps of update. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">full_update</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="UpdateWindow.send_file">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.update_toplevel.UpdateWindow.send_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">send_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls function to send file/s to configured device. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">send_file</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="UpdateWindow.pack_all">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.update_toplevel.UpdateWindow.pack_all">[docs]</a>
+    <span class="k">def</span> <span class="nf">pack_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Pack all GUI elements. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gui_elements</span><span class="p">[</span><span class="s2">&quot;start_update_btn&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                                                   <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gui_elements</span><span class="p">[</span><span class="s2">&quot;file_type_box&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
+                                                <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gui_elements</span><span class="p">[</span><span class="s2">&quot;file_type_label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                                                  <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gui_elements</span><span class="p">[</span><span class="s2">&quot;version_label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                                                <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gui_elements</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="c1"># self.submit.pack(expand=True, side=&quot;bottom&quot;, fill=&quot;x&quot;, padx=20, pady=10)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gui_elements</span><span class="p">[</span><span class="s2">&quot;go_main_btn&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
+                                              <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Updater">
+<a class="viewcode-back" href="../../backend.html#app_frontend.update_toplevel.Updater">[docs]</a>
+<span class="k">class</span> <span class="nc">Updater</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Backend for updater window. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">master</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="n">window</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_wifi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span> <span class="o">=</span> <span class="n">_File</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">continue_flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_flag</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Updater.run_from_main">
+<a class="viewcode-back" href="../../backend.html#app_frontend.update_toplevel.Updater.run_from_main">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_from_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Set variables if updater was opened from main window after scan. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">client_list</span><span class="p">:</span>
+            <span class="n">client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">client_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">device_pair</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">client_device_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">device_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">client_ble</span> <span class="o">==</span> <span class="n">client</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">continue_flag</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">pack_all</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">deiconify</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error while connecting, no device class was created&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_flag</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">deiconify</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Updater.scan">
+<a class="viewcode-back" href="../../backend.html#app_frontend.update_toplevel.Updater.scan">[docs]</a>
+    <span class="k">def</span> <span class="nf">scan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sets GUI for scanning and connecting device. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">continue_flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">withdraw</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">withdraw</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">open_toplevel</span><span class="p">(</span><span class="s2">&quot;Please wait! I&#39;m scanning!&quot;</span><span class="p">)</span>
+        <span class="n">scan_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scan_and_connect_thread</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">scan_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">continue_flag</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_flag</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">continue_flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">pack_all</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error while connecting, no device class was created&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">deiconify</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_scan_and_connect_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Handles scanning and connecting first device on list. &quot;&quot;&quot;</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">scan</span><span class="p">())</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">:</span>
+            <span class="n">ble_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">scanned_devices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">address</span> <span class="o">=</span> <span class="n">ble_device</span><span class="o">.</span><span class="n">address</span>
+            <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+            <span class="n">device_pair</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">single_connect</span><span class="p">(</span><span class="n">address</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">device_pair</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">continue_flag</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error_flag</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Updater.full_update">
+<a class="viewcode-back" href="../../backend.html#app_frontend.update_toplevel.Updater.full_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">full_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls main steps of update. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_ble</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_ble</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_size_ble</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_wifi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_wifi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_size_wifi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">client_ble</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">notifies</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">iter_upd_status</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Device doesn&#39;t exist, exiting&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">open_toplevel</span><span class="p">(</span><span class="s2">&quot;Please wait! I&#39;m updating!&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">withdraw</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_update</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Correct update process&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_done</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_file</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_update_status</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">toplevel_window</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">deiconify</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="o">-</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Critical error&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">response</span> <span class="o">==</span> <span class="o">-</span><span class="mi">3</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Notify error&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">response</span> <span class="o">==</span> <span class="o">-</span><span class="mi">4</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Timeout&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_check_update_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">file_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">file_type_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="c1"># TODO: add checking response after successfully sent files for BLE</span>
+        <span class="c1">#  and both files update</span>
+        <span class="c1"># needs correct handling of BLE reconnect</span>
+        <span class="k">if</span> <span class="n">file_type_str</span> <span class="o">==</span> <span class="s2">&quot;WiFi module&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c1"># print(&quot;Response:&quot;, *response)</span>
+                <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+                    <span class="k">while</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+                        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                            <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="c1"># print(&quot;Loop response:&quot;, *response)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                            <span class="k">break</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="c1"># print(&quot;Last response: &quot;, *response)</span>
+                        <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Whole update process ended correctly&quot;</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Uploading ESP ended with error&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error last response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;None client&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_start_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sets start-up for update process. &quot;&quot;&quot;</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_update_config</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="o">-</span><span class="mi">3</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error &gt;&gt;start_update&lt;&lt;&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">3</span><span class="p">:</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">get_update_status_notify</span><span class="p">()</span>
+                <span class="n">now_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="k">if</span> <span class="n">now_time</span> <span class="o">&gt;=</span> <span class="mf">10.0</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;My 1st timeout&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Response 1: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0xFF</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x01</span> <span class="ow">or</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x02</span> <span class="ow">or</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x03</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Initial conditions not met: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Wrong error on initial conditions: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_wifi</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">resp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Different error! Exiting&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">get_update_status_notify</span><span class="p">()</span>
+                <span class="n">now_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="k">if</span> <span class="n">now_time</span> <span class="o">&gt;=</span> <span class="mf">41.0</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;My 2nd timeout&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Response 2: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0xFF</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Device timeout: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x10</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Critical error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">2</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Different error! </span><span class="si">%s</span><span class="s2"> Exiting&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">continue_flag</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">get_update_status_notify</span><span class="p">()</span>
+                <span class="n">now_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="k">if</span> <span class="n">now_time</span> <span class="o">&lt;</span> <span class="mf">31.0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">client_wifi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">continue_flag</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;My 3rd timeout&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">continue_flag</span><span class="p">:</span>
+                        <span class="n">client_wifi_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">client_wifi</span>
+                        <span class="k">if</span> <span class="n">client_wifi_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">client_wifi</span> <span class="o">=</span> <span class="n">client_wifi_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">return</span> <span class="mi">0</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Response 3: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0xFF</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Device timeout: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_status</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">client_wifi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">client_wifi_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">client_wifi</span>
+                <span class="k">if</span> <span class="n">client_wifi_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">client_wifi</span> <span class="o">=</span> <span class="n">client_wifi_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t find client in devices&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Different error! Exiting&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_send_update_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Creates and sends update config. &quot;&quot;&quot;</span>
+        <span class="n">file_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">file_type_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="c1"># file_type_int = 0x00</span>
+        <span class="k">if</span> <span class="n">file_type_str</span> <span class="o">==</span> <span class="s2">&quot;BLE module&quot;</span><span class="p">:</span>
+            <span class="n">file_type_int</span> <span class="o">=</span> <span class="mh">0x01</span>
+        <span class="k">elif</span> <span class="n">file_type_str</span> <span class="o">==</span> <span class="s2">&quot;WiFi module&quot;</span><span class="p">:</span>
+            <span class="n">file_type_int</span> <span class="o">=</span> <span class="mh">0x02</span>
+        <span class="k">elif</span> <span class="n">file_type_str</span> <span class="o">==</span> <span class="s2">&quot;both&quot;</span><span class="p">:</span>
+            <span class="n">file_type_int</span> <span class="o">=</span> <span class="mh">0x03</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file_type_int</span> <span class="o">=</span> <span class="mh">0x00</span>
+        <span class="n">update_version_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">version_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="n">update_version_int</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">update_version_str</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">update_version_int</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_version_int</span> <span class="ow">and</span> <span class="n">file_type_int</span> <span class="o">!=</span> <span class="mh">0x00</span><span class="p">:</span>
+            <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_config_update</span><span class="p">(</span>
+                    <span class="n">firmware</span><span class="o">=</span><span class="n">file_type_int</span><span class="p">,</span>
+                    <span class="n">upd_nr</span><span class="o">=</span><span class="n">update_version_int</span><span class="p">,</span>
+                    <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">write_config_update</span><span class="p">(</span>
+                    <span class="n">firmware</span><span class="o">=</span><span class="n">file_type_int</span><span class="p">,</span>
+                    <span class="n">upd_nr</span><span class="o">=</span><span class="n">update_version_int</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="o">-</span><span class="mi">5</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">3</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ended&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gets update status from after update (Wi-Fi update only). &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">ble</span><span class="o">.</span><span class="n">read_update_success</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client_ble</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="o">-</span><span class="mi">5</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">3</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">def</span> <span class="nf">_get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gets physical file from path and prepare file contents. &quot;&quot;&quot;</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;BLE module&quot;</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">find_file</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Choose BLE module bin&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;WiFi module&quot;</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">find_file</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Choose WiFi module bin&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">file_stats</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;BLE module&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_ble</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># bin_file = open(path, &#39;rb&#39;)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">bin_file</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_size_ble</span> <span class="o">=</span> <span class="n">file_stats</span><span class="o">.</span><span class="n">st_size</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_ble</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">bin_file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_ble</span> <span class="o">=</span> <span class="n">zlib</span><span class="o">.</span><span class="n">crc32</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_ble</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_ble</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Crc32 BLE: </span><span class="si">%s</span><span class="s2"> Hex: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_ble</span><span class="p">,</span>
+                                     <span class="nb">hex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_ble</span><span class="p">))</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error opening or reading binary file&#39;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">elif</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;WiFi module&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_wifi</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">bin_file</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_size_wifi</span> <span class="o">=</span> <span class="n">file_stats</span><span class="o">.</span><span class="n">st_size</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_wifi</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">bin_file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_wifi</span> <span class="o">=</span> <span class="n">zlib</span><span class="o">.</span><span class="n">crc32</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_wifi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_wifi</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Crc32 Wi-Fi: </span><span class="si">%s</span><span class="s2"> Hex: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_wifi</span><span class="p">,</span>
+                                     <span class="nb">hex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_wifi</span><span class="p">))</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error opening or reading binary file&#39;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_handler_wifi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_ending</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_firmware</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="mh">0x02</span><span class="p">,</span>
+                                           <span class="n">file_ver</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                           <span class="n">file_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_size_wifi</span><span class="p">,</span>
+                                           <span class="n">crc32</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_wifi</span><span class="p">,</span>
+                                           <span class="n">file_arr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_wifi</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_response</span><span class="p">(</span><span class="n">is_ending</span><span class="o">=</span><span class="n">is_ending</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ended update without error&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ended update with crc error&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client disconnected while ending update&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+    <span class="k">def</span> <span class="nf">_handler_ble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_ending</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_firmware</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="mh">0x01</span><span class="p">,</span>
+                                           <span class="n">file_ver</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                           <span class="n">file_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_size_ble</span><span class="p">,</span>
+                                           <span class="n">crc32</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_ble</span><span class="p">,</span>
+                                           <span class="n">file_arr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_ble</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_response</span><span class="p">(</span><span class="n">is_ending</span><span class="o">=</span><span class="n">is_ending</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ended update without error&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ended update with crc error&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client disconnected while ending in update&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="Updater.send_file">
+<a class="viewcode-back" href="../../backend.html#app_frontend.update_toplevel.Updater.send_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">send_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calls function to send file/s to configured device. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_done</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">file_type_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">file_type_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_done</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">file_type_str</span> <span class="o">==</span> <span class="s2">&quot;BLE module&quot;</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;BLE module&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_ble</span><span class="p">(</span><span class="n">is_ending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ended update&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+            <span class="k">elif</span> <span class="n">file_type_str</span> <span class="o">==</span> <span class="s2">&quot;WiFi module&quot;</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;WiFi module&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_wifi</span><span class="p">(</span><span class="n">is_ending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ended update&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+            <span class="k">elif</span> <span class="n">file_type_str</span> <span class="o">==</span> <span class="s2">&quot;both&quot;</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;BLE module&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;WiFi module&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">while</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_firmware</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="mh">0x01</span><span class="p">,</span>
+                                                      <span class="n">file_ver</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                      <span class="n">file_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_size_ble</span><span class="p">,</span>
+                                                      <span class="n">crc32</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">crc32_ble</span><span class="p">,</span>
+                                                      <span class="n">file_arr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">file_arr_ble</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_response</span><span class="p">(</span><span class="n">is_ending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ended update without error&quot;</span><span class="p">)</span>
+                            <span class="k">elif</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ended update with crc error&quot;</span><span class="p">)</span>
+                                <span class="n">error</span> <span class="o">=</span> <span class="mi">1</span>
+                                <span class="k">break</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client disconnected while ending update&quot;</span><span class="p">)</span>
+                                <span class="n">error</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="k">elif</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">error</span> <span class="o">=</span> <span class="mi">1</span>
+                            <span class="k">break</span>
+
+                    <span class="k">if</span> <span class="n">error</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handler_wifi</span><span class="p">(</span><span class="n">is_ending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ended update&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_update_firmware</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">file_ver</span><span class="p">,</span> <span class="n">file_size</span><span class="p">,</span> <span class="n">crc32</span><span class="p">,</span> <span class="n">file_arr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sets file details for device and calls sending file by chunks. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">file_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">file_type</span> <span class="o">=</span> <span class="mh">0x01</span>
+
+        <span class="n">file_msg</span> <span class="o">=</span> <span class="n">file_characteristic</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="n">file_ver</span><span class="p">,</span> <span class="n">file_size</span><span class="p">,</span> <span class="n">crc32</span><span class="p">)</span>
+        <span class="c1"># file_str = list(file_msg)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;File char: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file_msg</span><span class="p">)</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">send_with_response</span><span class="p">(</span><span class="n">file_msg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_wifi</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;ok FILE&quot;</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">while</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_send</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="n">file_arr</span><span class="p">,</span> <span class="n">file_size</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Stopped update process due to too many errors&quot;</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Correct sent chunks&quot;</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="mi">0</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unexpected behavior. result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">result</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;file error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;client disconnected&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_chunk_send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">file_arr</span><span class="p">,</span> <span class="n">file_size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sends file chunk by chunk to device. &quot;&quot;&quot;</span>
+
+        <span class="n">chunk_size</span> <span class="o">=</span> <span class="n">CHUNK_SIZE</span>
+
+        <span class="n">div</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">file_size</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">)</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="n">div</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">iter_frame</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">iter_frame</span> <span class="o">=</span> <span class="n">iter_frame</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="o">-</span><span class="mi">5</span><span class="p">:</span>
+                    <span class="n">data_chunk</span> <span class="o">=</span> <span class="n">file_arr</span><span class="p">[(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chunk_size</span><span class="p">:</span> <span class="n">i</span> <span class="o">*</span> <span class="n">chunk_size</span><span class="p">]</span>
+                    <span class="n">crc</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">crc</span> <span class="o">=</span> <span class="n">calc_crc16</span><span class="p">(</span><span class="n">crc</span><span class="p">,</span> <span class="n">data_chunk</span><span class="p">)</span>
+                    <span class="n">chunk_msg</span> <span class="o">=</span> <span class="n">chunk_characteristic</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">,</span>
+                                                     <span class="n">packet_nr</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                                                     <span class="n">packet_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
+                                                     <span class="n">crc16</span><span class="o">=</span><span class="n">crc</span><span class="p">,</span>
+                                                     <span class="n">data</span><span class="o">=</span><span class="n">data_chunk</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">data_chunk</span> <span class="o">=</span> <span class="n">file_arr</span><span class="p">[(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chunk_size</span><span class="p">:</span> <span class="n">i</span> <span class="o">*</span> <span class="n">chunk_size</span><span class="p">]</span>
+                    <span class="n">crc</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">crc</span> <span class="o">=</span> <span class="n">calc_crc16</span><span class="p">(</span><span class="n">crc</span><span class="p">,</span> <span class="n">data_chunk</span><span class="p">)</span>
+                    <span class="n">chunk_msg</span> <span class="o">=</span> <span class="n">chunk_characteristic</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">,</span>
+                                                     <span class="n">packet_nr</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                                                     <span class="n">packet_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
+                                                     <span class="n">crc16</span><span class="o">=</span><span class="n">crc</span><span class="p">,</span>
+                                                     <span class="n">data</span><span class="o">=</span><span class="n">data_chunk</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data_chunk</span> <span class="o">=</span> <span class="n">file_arr</span><span class="p">[(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chunk_size</span><span class="p">:]</span>
+                <span class="n">crc</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">crc</span> <span class="o">=</span> <span class="n">calc_crc16</span><span class="p">(</span><span class="n">crc</span><span class="p">,</span> <span class="n">data_chunk</span><span class="p">)</span>
+                <span class="n">chunk_msg</span> <span class="o">=</span> <span class="n">chunk_characteristic</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">,</span>
+                                                 <span class="n">packet_nr</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                                                 <span class="n">packet_size</span><span class="o">=</span><span class="n">div</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                 <span class="n">crc16</span><span class="o">=</span><span class="n">crc</span><span class="p">,</span>
+                                                 <span class="n">data</span><span class="o">=</span><span class="n">data_chunk</span><span class="p">)</span>
+            <span class="n">chunk_str</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chunk_msg</span><span class="p">)</span>
+            <span class="n">len_chunk</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_chunk</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">send_with_response</span><span class="p">(</span><span class="n">chunk_msg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_wifi</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;ok CHUNK: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">iter_frame</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Chunk: </span><span class="si">%s</span><span class="s1"> len: </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">len_chunk</span><span class="p">,</span> <span class="n">chunk_str</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">12</span><span class="p">])</span>
+                <span class="n">iter_frame</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x04</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Lost chunk: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x05</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Crc16 error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x10</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Data saving error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x03</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Chunk error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0xFF</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Critical error, ending update&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">_end_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_ending</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gets device response after sending all chunks of file. &quot;&quot;&quot;</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">read_response</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                  <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client_wifi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Crc32 response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_ending</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x10</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Crc32 error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0xFF</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Correct CRC32, 0xff (updating) response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unknown response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x02</span> <span class="ow">or</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0x03</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Correct CRC32, next file&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unknown response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;client disconnected&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,533 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_backend.wifi_server &mdash; BLE and TCP app 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app_backend.wifi_server</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app_backend.wifi_server</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Module providing creating and handling TCP server. &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">select</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">credentials</span> <span class="k">as</span> <span class="nn">cr</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">credentials_template</span> <span class="k">as</span> <span class="nn">cr</span>
+
+<span class="kn">from</span> <span class="nn">logger_set</span> <span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span> <span class="nn">.parser</span> <span class="kn">import</span> <span class="n">meas_data_parser</span>
+
+
+
+<span class="n">HOST</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">HOST</span>
+<span class="n">PORT</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">PORT</span>
+
+
+<div class="viewcode-block" id="calc_crc16">
+<a class="viewcode-back" href="../../backend.html#app_backend.wifi_server.calc_crc16">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_crc16</span><span class="p">(</span><span class="n">input_arr</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Calculate CRC16 from array.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        input_arr: bytes</span>
+<span class="sd">            data to calculate crc16 from</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Calculated CRC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">crc</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data_bytes</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">input_arr</span><span class="p">:</span>
+        <span class="n">data_bytes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">data_bytes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">data_bytes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">data_bytes</span><span class="p">:</span>
+        <span class="n">temp_byte</span> <span class="o">=</span> <span class="n">b</span> <span class="o">|</span> <span class="mh">0x100</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">temp_byte</span> <span class="o">&amp;</span> <span class="mh">0x10000</span><span class="p">:</span>
+            <span class="n">crc</span> <span class="o">=</span> <span class="n">crc</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
+            <span class="n">temp_byte</span> <span class="o">=</span> <span class="n">temp_byte</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">temp_byte</span> <span class="o">&amp;</span> <span class="mh">0x100</span><span class="p">:</span>
+                <span class="n">crc</span> <span class="o">=</span> <span class="n">crc</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">crc</span> <span class="o">&amp;</span> <span class="mh">0x10000</span><span class="p">:</span>
+                <span class="n">crc</span> <span class="o">=</span> <span class="n">crc</span> <span class="o">^</span> <span class="mh">0x1021</span>
+        <span class="n">crc</span> <span class="o">=</span> <span class="n">crc</span> <span class="o">&amp;</span> <span class="mh">0xffff</span>
+
+    <span class="k">return</span> <span class="n">crc</span></div>
+
+
+
+<div class="viewcode-block" id="WiFi">
+<a class="viewcode-back" href="../../backend.html#app_backend.wifi_server.WiFi">[docs]</a>
+<span class="k">class</span> <span class="nc">WiFi</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Class for creating and handle Wi-Fi servers and clients.</span>
+
+<span class="sd">    Creates server, listens for clients and allows reading and writing</span>
+<span class="sd">    to client&#39;s socket buffer. Server does keepAlive checks for idle clients.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        client_flag: bool</span>
+<span class="sd">        clients: list</span>
+<span class="sd">        list_of_threads: list</span>
+<span class="sd">        listening_clients: list</span>
+<span class="sd">        dev_classes</span>
+<span class="sd">        s: socket.socket</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when creating and binding</span>
+<span class="sd">            socket.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_flag</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_flag</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clients</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_of_threads</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listening_clients</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dev_classes</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+            <span class="n">idle_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+            <span class="n">interval_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">ioctl</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SIO_KEEPALIVE_VALS</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">idle_time</span><span class="p">,</span> <span class="n">interval_time</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">((</span><span class="n">HOST</span><span class="p">,</span> <span class="n">PORT</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Socket server created&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error creating server&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+<div class="viewcode-block" id="WiFi.create_server">
+<a class="viewcode-back" href="../../backend.html#app_backend.wifi_server.WiFi.create_server">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_server</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Listens on socket for new clients.</span>
+
+<span class="sd">        Listens for new clients. After catching client, reads header and</span>
+<span class="sd">        creates connection with BLE client (if exists).</span>
+<span class="sd">        If client got accepted on new port, every instance is updated.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when accepting new clients</span>
+<span class="sd">            or parsing header.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Server listening&quot;</span><span class="p">)</span>
+        <span class="n">ip_addr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_flag</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">client</span><span class="p">,</span> <span class="n">ip_addr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Client or server forced close on address: </span><span class="si">%s</span><span class="s1"> with error </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                             <span class="n">ip_addr</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TimeoutError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Timeout error accepting client: </span><span class="si">%s</span><span class="s1"> with error </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">ip_addr</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error listening on server &gt;&gt;create_server&lt;&lt;: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Connect: </span><span class="si">%s</span><span class="s2"> client: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ip_addr</span><span class="p">[:],</span> <span class="n">client</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">15</span><span class="p">:</span>
+                    <span class="n">output_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]])</span>
+                    <span class="n">output_mac</span> <span class="o">=</span> <span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;0&gt;2X&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="p">:]])</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> address </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">output_str</span><span class="p">,</span> <span class="n">output_mac</span><span class="p">,</span> <span class="n">ip_addr</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_add_client</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">ip_addr</span><span class="p">,</span> <span class="n">output_mac</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data, bytes: </span><span class="si">%s</span><span class="s2"> address: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">ip_addr</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Closing server&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_add_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">ip_addr</span><span class="p">,</span> <span class="n">output_mac</span><span class="p">,):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cli</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cli</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">output_mac</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cli</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">client</span><span class="p">,</span> <span class="n">ip_addr</span><span class="p">,</span> <span class="n">output_mac</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dev_classes</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dev_classes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">output_mac</span> <span class="o">==</span> <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">:</span>
+                    <span class="n">device</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">client_wifi</span> <span class="o">=</span> <span class="p">[</span><span class="n">client</span><span class="p">,</span> <span class="n">ip_addr</span><span class="p">,</span> <span class="n">output_mac</span><span class="p">]</span>
+
+<div class="viewcode-block" id="WiFi.listen_on_socket">
+<a class="viewcode-back" href="../../backend.html#app_backend.wifi_server.WiFi.listen_on_socket">[docs]</a>
+    <span class="k">def</span> <span class="nf">listen_on_socket</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Creates new thread for every eligible Wi-Fi client.</span>
+
+<span class="sd">        Checks if client is already on listen. If not, starts new thread for</span>
+<span class="sd">        client</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError, Exception: error occurred when creating threads or</span>
+<span class="sd">            checking existing threads.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">:</span>
+                <span class="n">client</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">addr</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">is_listening</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">cli</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">listening_clients</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">cli</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+                        <span class="n">is_listening</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_listening</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">dev</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dev_classes</span><span class="p">:</span>
+                        <span class="n">wifi_client</span> <span class="o">=</span> <span class="n">dev</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">client_wifi</span>
+                        <span class="k">if</span> <span class="n">wifi_client</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">addr</span><span class="p">:</span>
+                            <span class="n">device</span> <span class="o">=</span> <span class="n">dev</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">listening_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_new_client</span><span class="p">,</span>
+                                                            <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">device</span><span class="p">),</span>
+                                                            <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">list_of_threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">listening_thread</span><span class="p">)</span>
+                        <span class="n">listening_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">listening_clients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Listening thread: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">addr</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Device is none&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client </span><span class="si">%s</span><span class="s2"> already on listen&quot;</span><span class="p">,</span> <span class="n">addr</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error listening on server &gt;&gt;listen_on_socket&lt;&lt;: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_flag</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Closing server&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WiFi.on_new_client">
+<a class="viewcode-back" href="../../backend.html#app_backend.wifi_server.WiFi.on_new_client">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_new_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Listens and interprets data</span>
+
+<span class="sd">        Listen on established socket buffer. Listens without blocking thread.</span>
+<span class="sd">        If device is passed, gets configuration data for parsing received data.</span>
+<span class="sd">        After catching connection error, removes client form list.</span>
+<span class="sd">        Reacts with graceful and hard disconnect.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            conn: socket.socket</span>
+<span class="sd">                object to send and receive data</span>
+<span class="sd">            address: tuple</span>
+<span class="sd">                ip address and port received by client</span>
+<span class="sd">            device: Device, optional</span>
+<span class="sd">                instance of class with BLE and Wi-Fi client references</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: error occurred on connection between sockets.</span>
+<span class="sd">            select.error: error occurred while waiting on data</span>
+<span class="sd">            Exception: error occurred on parsing data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_flag</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ready</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">conn</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="mf">5.0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ready</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_handler_data_receiver</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Client disconnected&quot;</span><span class="p">)</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ConnectionError</span><span class="p">,</span> <span class="n">select</span><span class="o">.</span><span class="n">error</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="ne">ConnectionError</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Caught connection error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="n">select</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Client or socket closed: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_client_remover</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Client exception: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">break</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Closing connection with client: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client_remover</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;End client listening&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_handler_data_receiver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Choose action based on length and header of data. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">15</span><span class="p">:</span>
+            <span class="n">output_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="n">output_str</span> <span class="o">==</span> <span class="s2">&quot;READY</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">:</span>
+                <span class="n">output_mac</span> <span class="o">=</span> <span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;0&gt;2X&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="p">:]])</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data &gt;on_new_client&lt;: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> address: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                             <span class="n">output_str</span><span class="p">,</span> <span class="n">output_mac</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data: </span><span class="si">%s</span><span class="s2"> address: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">address</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">device</span><span class="o">.</span><span class="n">configure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_handler_data_parser</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Data len: </span><span class="si">%s</span><span class="s2"> address: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">address</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_handler_data_parser</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Decode common data elements. &quot;&quot;&quot;</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">configure</span>
+        <span class="n">data_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]])</span>
+        <span class="n">packet_len</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span>
+                                    <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">meas_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">6</span> <span class="o">+</span> <span class="n">data_len</span><span class="p">]</span>
+        <span class="n">crc</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:],</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span>
+                             <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">crc_calc</span> <span class="o">=</span> <span class="n">calc_crc16</span><span class="p">(</span><span class="n">meas_data</span><span class="p">)</span>
+
+        <span class="n">packet_len_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">packet_len</span><span class="p">)</span>
+        <span class="n">crc_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">crc</span><span class="p">)</span>
+
+        <span class="n">battery</span> <span class="o">=</span> <span class="n">meas_data</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">battery</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">5</span> <span class="ow">or</span> <span class="n">battery</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">crc</span> <span class="o">==</span> <span class="n">crc_calc</span><span class="p">:</span>
+                <span class="c1"># inp_str = (header + &quot; &quot; + packet_len_str + &quot; &quot; +</span>
+                <span class="c1"># &quot;&lt;data&gt;&quot; + &quot; &quot; + crc_str +</span>
+                <span class="c1"># &quot;&gt;&quot; + str(crc_calc) + &quot;&lt;&quot;)</span>
+                <span class="n">meas_data_parser</span><span class="p">(</span><span class="n">meas_data</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">device</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="n">header</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span>
+                           <span class="n">packet_len_str</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span>
+                           <span class="s2">&quot;&lt;data&gt;&quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span>
+                           <span class="n">crc_str</span> <span class="o">+</span> <span class="s2">&quot;&gt;&quot;</span> <span class="o">+</span>
+                           <span class="nb">str</span><span class="p">(</span><span class="n">crc_calc</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Packet: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">inp_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_client_remover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Helper method for removing client from list. &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">address</span> <span class="o">==</span> <span class="n">client</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+                <span class="n">mac</span> <span class="o">=</span> <span class="n">client</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">dev</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dev_classes</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">mac</span> <span class="o">==</span> <span class="n">dev</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">:</span>
+                        <span class="n">dev</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">client_wifi</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+<div class="viewcode-block" id="WiFi.send_with_response">
+<a class="viewcode-back" href="../../backend.html#app_backend.wifi_server.WiFi.send_with_response">[docs]</a>
+    <span class="k">def</span> <span class="nf">send_with_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">,</span> <span class="n">client</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sends data and waits for response</span>
+
+<span class="sd">        Sends data to chosen client (or all available clients) and waits for</span>
+<span class="sd">        client&#39;s sent data in response.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            msg: bytearray</span>
+<span class="sd">                data to send</span>
+<span class="sd">            client: socket.socket</span>
+<span class="sd">                client object to send and receive data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            client response or list of clients responses</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            socket.error: error occurred when sending or receiving data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">client</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+                <span class="n">client</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                <span class="c1"># 0 = done receiving, 1 = done sending, 2 = both</span>
+                <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ready</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">client</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[])</span>
+                <span class="k">if</span> <span class="n">ready</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+                    <span class="n">list_response</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">list_response</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">:</span>
+                <span class="n">client</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">client</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+                    <span class="n">client</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="c1"># 0 = done receiving, 1 = done sending, 2 = both</span>
+                    <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ready</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">client</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[])</span>
+                    <span class="k">if</span> <span class="n">ready</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+                        <span class="n">list_response</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">list_response</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="WiFi.read_response">
+<a class="viewcode-back" href="../../backend.html#app_backend.wifi_server.WiFi.read_response">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">read_response</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">client</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reads data from client</span>
+
+<span class="sd">        Reads data on demand with blocking or non-blocking way.</span>
+<span class="sd">        Reads data from chosen client or all existing clients.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            timeout: bool</span>
+<span class="sd">                choose if thread will be blocked while waiting for data</span>
+<span class="sd">            client: socket.socket</span>
+<span class="sd">                client object to receive data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            client response or list of clients responses</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: error occurred on connection status between sockets.</span>
+<span class="sd">            socket.error: error occurred when receiving data.</span>
+<span class="sd">            Exception: error occurred while handling lists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timeout</span><span class="p">:</span>
+                <span class="n">list_response</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">ready</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">client</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[])</span>
+                    <span class="k">if</span> <span class="n">ready</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+                        <span class="n">list_response</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ConnectionError</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Caught connection error&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Client or socket closed: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Client exception: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">list_response</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+                <span class="n">list_response</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">list_response</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="WiFi.on_close">
+<a class="viewcode-back" href="../../backend.html#app_backend.wifi_server.WiFi.on_close">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gracefully joins clients&#39; threads and closes server.</span>
+
+<span class="sd">        Sets flags to graceful ending clients listening, joins clients threads</span>
+<span class="sd">        and prints number of clients connected</span>
+<span class="sd">        before closing server. Closes clients sockets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">threads</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">enumerate</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;on_new_client&quot;</span> <span class="ow">in</span> <span class="n">thread</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Nr of clients: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">:</span>
+            <span class="n">client</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="p">:</span>
+            <span class="n">client</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

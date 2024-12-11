@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_frontend.window_info &mdash; BLE and TCP app 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BLE and TCP app
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frontend.html">Frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BLE and TCP app</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app_frontend.window_info</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app_frontend.window_info</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; GUI class for presenting full device info. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span> <span class="nn">dataclasses</span>
+
+<span class="kn">import</span> <span class="nn">customtkinter</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="kn">from</span> <span class="nn">app_frontend.window_shared_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">set_geometry</span><span class="p">,</span>
+    <span class="n">set_style</span><span class="p">,</span>
+    <span class="n">redirector</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">app_frontend.gui_main</span> <span class="kn">import</span> <span class="n">App</span>
+
+
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span> <span class="nc">_Info</span><span class="p">:</span>
+    <span class="n">update_nr</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">firmware_wifi</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">bootloader</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">mac_ble</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">fus</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">ble_stack</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">firmware_ble</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">c_year</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">c_month</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">c_day</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">c_hour</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">c_minute</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">mac_wifi</span><span class="p">:</span> <span class="nb">list</span>
+
+
+<div class="viewcode-block" id="WindowFullInfo">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.window_info.WindowFullInfo">[docs]</a>
+<span class="k">class</span> <span class="nc">WindowFullInfo</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">CTkToplevel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Handles and presents full device info. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">:</span> <span class="n">App</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mi">600</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="mi">400</span>
+
+        <span class="n">set_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Device - info&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">master</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                                 <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                                 <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">),</span>
+                                 <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;upd&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;ble&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;wifi&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;mac_ble&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;mac_wifi&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;boot&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;stack&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;fus&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="s2">&quot;wifi_date&quot;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">CTkTextbox</span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;upd&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cget</span><span class="p">(</span><span class="s1">&#39;fg_color&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">fg_color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">set_style</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">(</span><span class="s2">&quot;WM_DELETE_WINDOW&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_exit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wm_attributes</span><span class="p">(</span><span class="s2">&quot;-topmost&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WindowFullInfo.on_exit">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.window_info.WindowFullInfo.on_exit">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Called when window is closed. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">deiconify</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="WindowFullInfo.show_info">
+<a class="viewcode-back" href="../../frontend.html#app_frontend.window_info.WindowFullInfo.show_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">show_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Parses data and presents it in readable form. &quot;&quot;&quot;</span>
+
+        <span class="n">address</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">response</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">list_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="c1"># print(&quot;List data: &quot;, *list_data)</span>
+
+        <span class="n">info</span> <span class="o">=</span> <span class="n">_Info</span><span class="p">(</span>
+            <span class="n">update_nr</span><span class="o">=</span><span class="n">list_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span>
+            <span class="n">firmware_wifi</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span>
+            <span class="n">bootloader</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">9</span><span class="p">],</span>
+            <span class="n">mac_ble</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">9</span><span class="p">:</span><span class="mi">15</span><span class="p">],</span>
+            <span class="n">fus</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">15</span><span class="p">:</span><span class="mi">18</span><span class="p">],</span>
+            <span class="n">ble_stack</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">18</span><span class="p">:</span><span class="mi">21</span><span class="p">],</span>
+            <span class="n">firmware_ble</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">21</span><span class="p">:</span><span class="mi">24</span><span class="p">],</span>
+            <span class="n">c_year</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">list_data</span><span class="p">[</span><span class="mi">24</span><span class="p">:</span><span class="mi">26</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">c_month</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">26</span><span class="p">],</span>
+            <span class="n">c_day</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">27</span><span class="p">],</span>
+            <span class="n">c_hour</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">28</span><span class="p">],</span>
+            <span class="n">c_minute</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">29</span><span class="p">],</span>
+            <span class="n">mac_wifi</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">30</span><span class="p">:</span><span class="mi">36</span><span class="p">],</span>
+        <span class="p">)</span>
+
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Update number: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">update_nr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">update_nr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">update_nr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;upd&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wi-Fi firmware: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">firmware_wifi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">firmware_wifi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">firmware_wifi</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;wifi&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BLE firmware: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">firmware_ble</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">firmware_ble</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">firmware_ble</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;ble&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MAC Wi-Fi: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_wifi</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;mac_wifi&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MAC BLE: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">:&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">mac_ble</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="si">:</span><span class="s2">0&gt;2X</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;mac_ble&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compilation date: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">c_hour</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">c_minute</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2"> &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">c_day</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">c_month</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">c_year</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bootloader version: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">bootloader</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">bootloader</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">bootloader</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;boot&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BLE stack version: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">ble_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">ble_stack</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">ble_stack</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;stack&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FUS version: </span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">fus</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">fus</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">fus</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;fus&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">40</span><span class="p">:</span>
+            <span class="n">wifi_year</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">list_data</span><span class="p">[</span><span class="mi">40</span><span class="p">:</span><span class="mi">42</span><span class="p">],</span> <span class="s1">&#39;little&#39;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">wifi_month</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">42</span><span class="p">]</span>
+            <span class="n">wifi_day</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">43</span><span class="p">]</span>
+            <span class="n">wifi_hour</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">44</span><span class="p">]</span>
+            <span class="n">wifi_minute</span> <span class="o">=</span> <span class="n">list_data</span><span class="p">[</span><span class="mi">45</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;wifi_date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
+
+            <span class="n">inp_str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wi-Fi compilation date: &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wifi_hour</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">wifi_minute</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2"> &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wifi_day</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">wifi_month</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">wifi_year</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">redirector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">textboxes</span><span class="p">[</span><span class="s2">&quot;wifi_date&quot;</span><span class="p">],</span> <span class="n">inp_str</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2024, Natalia Kowalska.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
