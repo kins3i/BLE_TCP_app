@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "wifi-ble-app"
+version = "0.0.2"
+description = "GUI based app for wireless device with TCP and BLE protocols."
+authors = ["kins3i <natkow97@gmail.com>"]
+readme = "README.md"
+package-mode = false
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: AsyncIO",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+]
+
+[tool.poetry.urls]
+"Changelog" =  "https://github.com/kins3i/BLE_WiFi_app/blob/master/CHANGELOG.rst"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+bleak = "0.22.2"
+customtkinter = "5.2.2"
+pywin32 = "308"
+
+[tool.poetry.group.docs.dependencies]
+Sphinx = "8.1.3"
+sphinx-autobuild = "2024.10.3"
+sphinx-rtd-theme = "3.0.2"
+sphinx_changelog = "1.6.0"
+
+[tool.poetry.group.lint.dependencies]
+pylint = "3.3.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
