@@ -4,6 +4,7 @@ Changelog
 
 `Unreleased`_
 ---------------------
+* Reformated docs directories for GitHub Pages.
 
 
 `0.0.2`_ (2024-12-11)
