@@ -13,7 +13,3 @@ Contents
    backend
    frontend
    history
-
-.. changelog::
-   :towncrier: ../
-   :changelog_file: ../CHANGELOG.rst

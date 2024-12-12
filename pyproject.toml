@@ -11,6 +11,8 @@ classifiers = [
     "Operating System :: Microsoft :: Windows :: Windows 10",
 ]
 
+[tool.towncrier]
+
 [tool.poetry.urls]
 "Changelog" =  "https://github.com/kins3i/BLE_WiFi_app/blob/master/CHANGELOG.rst"
 

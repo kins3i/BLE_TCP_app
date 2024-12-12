@@ -1,11 +1,13 @@
-============
+
 Changelog
 ============
 
 `Unreleased`_
 ---------------------
+
 * Reformated docs directories for GitHub Pages.
-* Added .nojekyll file for static CSS.
+* Added .nojekyll file for static CSS GitHub Pages.
+* Removed double changelog in main page.
 
 
 `0.0.2`_ (2024-12-11)
